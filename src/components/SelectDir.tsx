@@ -8,17 +8,19 @@ interface IProps {}
 export default function SelectDir(props: IProps) {
   const { currentpath, setCurrentpath, setCategories } = useResources();
 
-  const handleSelectDirectory = () => {
+  const handleSelectDirectory = async () => {
     const params = {
       type: "selectPath",
       data: "",
     };
-    api.sendMessage(params as unknown as IPCInfo);
-    api.on("selectPath_back", (data: any) => {
-      console.log("反馈结果>>>>", data);
-      setCategories(data.files);
-      setCurrentpath(data.folderPath);
-    });
+    const res = (await api.get("/getFiles")) as any;
+    console.log("rees>>>", res);
+    // api.sendMessage(params as unknown as IPCInfo);
+    // api.on("selectPath_back", (data: any) => {
+    //   console.log("反馈结果>>>>", data);
+    setCategories(res);
+    setCurrentpath("D:\\RESP");
+    // });
   };
 
   const scanDirectory = (dir: string) => {};
