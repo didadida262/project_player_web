@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  @keyframes fadeIn {
+    0% {
+      transform: translateY(-20px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+  @keyframes fadeInAnimation {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeInAnimation 0.5s ease-in;
+  }
+  .animated-underline {
+    background-image:
+      linear-gradient(#33333300, #33333300),
+      linear-gradient(
+        to right,
+        var(--color-primary-400),
+        var(--color-primary-500)
+      );
+    background-size:
+      100% 2px,
+      0 2px;
+    background-position:
+      100% 100%,
+      0 100%;
+    background-repeat: no-repeat;
+  }
+}
+.markBorderG {
+  border: 1px solid green;
+}
+.markBorderR {
+  border: 1px solid red;
+}
+.markBorderO {
+  border: 1px solid orange;
+}
+
+.page-layout {
+  width: calc(100vw - 32px);
+  max-width: 1294px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* 在你的全局 CSS 文件中添加 */
+/* .ant-menu-item,
+.ant-menu-submenu-title {
+  background-color: black !important;
+}
+
+.ant-menu-submenu > .ant-menu {
+  background-color: black !important;
+} */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
