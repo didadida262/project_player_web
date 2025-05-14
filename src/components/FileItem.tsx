@@ -39,9 +39,8 @@ export default function FileItem(props: IProps) {
     <div
       className={cn(
         "w-[100px] h-[110px] flex flex-col justify-between items-center hover:cursor-pointer",
-        "border-[1px] border-solid border-[#383b45]",
         "hover:border-[#0acaff] hover:border-[3px]",
-        currentFile.name === file.name ? "border-[#0acaff] border-[3px]" : "",
+        currentFile.name === file.name ? "border-[#0acaff] border-[3px] border-solid" : "border-[1px] border-solid border-[#383b45]",
         "mx-[10px]",
       )}
       style={{ display: "inline-block" }}
