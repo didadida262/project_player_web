@@ -37,7 +37,7 @@ const ResourcesContext = createContext<ResourcesContextType | undefined>(
 );
 
 export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
-  const [currentpath, setCurrentpath] = useState<string>("D:\\RESP");
+  const [currentpath, setCurrentpath] = useState<string>("");
   const [currentCate, setCurrentCate] = useState<any>({});
   const [currentFile, setCurrentFile] = useState<any>({});
   const [currentfileurl, setcurrentfileurl] = useState<any>();

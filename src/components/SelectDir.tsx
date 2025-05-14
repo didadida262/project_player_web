@@ -12,6 +12,7 @@ export default function SelectDir(props: IProps) {
 
   const handleSelectDirectory = async () => {
     const params = { path: currentpath };
+    console.log("currentpath", currentpath);
     const res = (await getFiles(params)) as any;
     console.log("dirs>>>", res);
     setCategories(res);
