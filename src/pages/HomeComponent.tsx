@@ -1,12 +1,15 @@
+import MainPage from "./MainPage";
+
 export default function HomeComponent() {
   return (
-    <div className="w-full h-full text-[50px] bg-[rgb(91,90,90)]">
-      <video
+    <div className="w-full h-full text-[50px] bg-black">
+      <MainPage></MainPage>
+      {/* <video
         src="http://localhost:3001/video"
         className="w-full h-full "
         autoPlay
         controls
-      ></video>
+      ></video> */}
     </div>
   );
 }

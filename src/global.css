@@ -49,6 +49,10 @@
 .markBorderO {
   border: 1px solid orange;
 }
+.markBorderT {
+  border: 1px solid rgb(25, 60, 89);
+  border-radius: 4px;
+}
 
 .page-layout {
   width: calc(100vw - 32px);
@@ -70,3 +74,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  /* 水平滚动条高度（即宽度） */
+  /* Y 轴滚动条宽度 */
+}
+
+::-webkit-scrollbar-track {
+  background: #555;
+  /* Y 轴滚动条轨道背景 */
+}
+
+::-webkit-scrollbar-thumb {
+  background: black;
+  /* Y 轴滚动条滑块颜色 */
+  /* Y 轴滚动条滑块圆角 */
+  border: 1px solid #383b45;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0acaff;
+  /* Y 轴滚动条滑块悬停颜色 */
+}
