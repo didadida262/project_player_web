@@ -2,22 +2,28 @@ import { useResources } from "../provider/resource-context";
 import cn from "classnames";
 import api from "../api/index";
 import { IPCInfo } from "../utils/index";
+import { getFiles } from "@/api/common";
 
 export default function CategoryContainer() {
   const { categories, setSourcelist, currentCate, setCurrentCate } =
     useResources();
 
-  const handleClick = (file: any) => {
+  const handleClick = async (file: any) => {
     setCurrentCate(file);
-    const path = file.path;
     const params = {
-      type: "getAllFiles",
-      data: path,
+      path: file.path,
     };
-    api.sendMessage(params as unknown as IPCInfo);
-    api.on("getAllFiles_back", (data: any) => {
-      setSourcelist(data.files);
-    });
+    // const params = {
+    //   type: "getAllFiles",
+    //   data: path,
+    // };
+    // api.sendMessage(params as unknown as IPCInfo);
+    // api.on("getAllFiles_back", (data: any) => {
+    //   setSourcelist(data.files);
+    // });
+    const res = (await getFiles(params)) as any;
+    console.log("files>>>", res);
+    setSourcelist(res);
   };
 
   return (
