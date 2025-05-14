@@ -29,10 +29,11 @@ export default function MainPage(props: IProps) {
         </div>
         <div className="w-[calc(100%_-_165px)] h-full flex flex-col justify-between items-center markBorderT">
           <div className=" w-full h-[calc(100%_-_125px)] px-[8px] py-[8px] ">
-            {currentFile.type === "video" && <VideoContainer />}
+            <VideoContainer />
+            {/* {currentFile.type === "video" && <VideoContainer />}
             {currentFile.type === "image" && <ImgContainer />}
             {currentFile.type === "audio" && <AudioContainer />}
-            {currentFile.type === "pdf" && <PdfContainer />}
+            {currentFile.type === "pdf" && <PdfContainer />} */}
           </div>
           <div className="Filelist w-full h-[120px]">
             <FileList />

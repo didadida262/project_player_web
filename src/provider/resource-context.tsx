@@ -78,76 +78,8 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const selectFile = (file: TFile) => {
-    const params = {
-      type: "getVideoContent",
-      data: file.path,
-    };
-    // 打点
-    api.sendMessage(params as unknown as IPCInfo);
-
-    if (file.type === "video") {
-      const mediaSource = new MediaSource();
-      const url = URL.createObjectURL(mediaSource);
-      setcurrentfileurl(url);
-
-      let sourceBuffer: SourceBuffer | null = null;
-      let chunksToAppend: any[] = [];
-      let isAppending = false;
-
-      mediaSource.addEventListener("sourceopen", () => {
-        // 指定完整的 MIME 类型
-        const mimeType = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
-        if (MediaSource.isTypeSupported(mimeType)) {
-          sourceBuffer = mediaSource.addSourceBuffer(mimeType);
-        } else {
-          console.error("不支持的 MIME 类型:", mimeType);
-        }
-
-        sourceBuffer?.addEventListener("updateend", () => {
-          isAppending = false;
-          if (chunksToAppend.length > 0) {
-            const nextChunk = chunksToAppend.shift();
-            appendChunk(nextChunk);
-          }
-        });
-      });
-
-      const appendChunk = (chunkData: any) => {
-        if (sourceBuffer && !isAppending) {
-          isAppending = true;
-          sourceBuffer.appendBuffer(chunkData.file);
-          if (chunkData.isLastChunk) {
-            sourceBuffer.addEventListener("updateend", () => {
-              if (!(mediaSource as any).ended) {
-                (mediaSource as any).endOfStream();
-              }
-            });
-          }
-        } else {
-          chunksToAppend.push(chunkData);
-        }
-      };
-
-      api.on("getVideoContent_back", (data: any) => {
-        appendChunk(data);
-      });
-    } else {
-      api.on("getVideoContent_back", (data: any) => {
-        switch (file.type) {
-          case "image":
-            handleCommonFile(data.file, file.type);
-            break;
-          case "pdf":
-            handlePdfFile(data.file, file.type);
-            break;
-          case "audio":
-            handleCommonFile(data.file, file.type);
-            break;
-          default:
-            break;
-        }
-      });
-    }
+    console.log("selectFile>>>>", file);
+    setcurrentfileurl(`http://localhost:3001/video?path=${file.path}`);
   };
   useEffect(() => {
     console.log("currentpath>>>", currentpath);

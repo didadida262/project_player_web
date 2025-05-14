@@ -13,14 +13,6 @@ export default function CategoryContainer() {
     const params = {
       path: file.path,
     };
-    // const params = {
-    //   type: "getAllFiles",
-    //   data: path,
-    // };
-    // api.sendMessage(params as unknown as IPCInfo);
-    // api.on("getAllFiles_back", (data: any) => {
-    //   setSourcelist(data.files);
-    // });
     const res = (await getFiles(params)) as any;
     console.log("files>>>", res);
     setSourcelist(res);
