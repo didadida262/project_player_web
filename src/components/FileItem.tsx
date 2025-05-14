@@ -31,6 +31,7 @@ export default function FileItem(props: IProps) {
 
   const handleClick = () => {
     console.log("select_file>>>", file);
+    // setcurrentfileurl("");
     setCurrentFile(file);
   };
 

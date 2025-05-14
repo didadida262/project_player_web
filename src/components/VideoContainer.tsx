@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
-import { useResources } from '../provider/resource-context'
-import { Button } from 'antd'
+import { useEffect } from "react";
+import { useResources } from "../provider/resource-context";
+import { Button } from "antd";
 
 export default function VideoContainer() {
   const {
@@ -11,22 +11,22 @@ export default function VideoContainer() {
     selectFile,
     setCurrentFile,
     getNextVideo,
-  } = useResources()
+  } = useResources();
 
   const handlePlayMode = () => {
-    setPalyerMode(palyerMode === 'order' ? 'random' : 'order')
-  }
+    setPalyerMode(palyerMode === "order" ? "random" : "order");
+  };
   const handleNext = () => {
-    const nextFile = getNextVideo()
-    setCurrentFile(nextFile)
-  }
+    const nextFile = getNextVideo();
+    setCurrentFile(nextFile);
+  };
 
-  useEffect(() => {}, currentfileurl)
+  useEffect(() => {}, [currentfileurl]);
 
   useEffect(() => {
-    if (!currentFile.name) return
-    selectFile(currentFile)
-  }, [currentFile])
+    if (!currentFile.name) return;
+    selectFile(currentFile);
+  }, [currentFile]);
 
   return (
     <div className="w-full h-full flex justify-between items-center flex-col">
@@ -41,7 +41,7 @@ export default function VideoContainer() {
         />
       </div>
       <div className="operation w-full h-[50px] flex justify-start items-center gap-x-[20px]">
-        {palyerMode === 'order' ? (
+        {palyerMode === "order" ? (
           <Button type="primary" onClick={handlePlayMode}>
             顺序播放
           </Button>
@@ -56,5 +56,5 @@ export default function VideoContainer() {
         </Button>
       </div>
     </div>
-  )
+  );
 }
