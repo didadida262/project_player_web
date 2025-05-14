@@ -37,18 +37,18 @@ export default function MainPage(props: IProps) {
         <SelectDir />
       </div>
       <div className="content w-full h-[calc(100%_-_45px)]  px-[5px] py-[5px] flex justify-between items-center">
-        <div className="cate w-[160px] h-full markBorderT">
+        <div className="cate w-[190px] h-full markBorderT">
           <CategoryContainer />
         </div>
-        <div className="w-[calc(100%_-_165px)] h-full flex flex-col justify-between items-center markBorderT">
-          <div className=" w-full h-[calc(100%_-_125px)] px-[8px] py-[8px] ">
+        <div className="w-[calc(100%_-_195px)] h-full flex flex-col justify-between items-center markBorderT">
+          <div className=" w-full h-[calc(100%_-_135px)] px-[8px] py-[8px] ">
             <VideoContainer />
             {/* {currentFile.type === "video" && <VideoContainer />}
             {currentFile.type === "image" && <ImgContainer />}
             {currentFile.type === "audio" && <AudioContainer />}
             {currentFile.type === "pdf" && <PdfContainer />} */}
           </div>
-          <div className="Filelist w-full h-[120px]">
+          <div className="Filelist w-full h-[130px]">
             <FileList />
           </div>
         </div>

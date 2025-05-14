@@ -24,13 +24,14 @@ export default function CategoryContainer() {
         <div
           key={index}
           className={cn(
-            "w-full h-[40px]  text-[14px] flex justify-center items-center",
+            "w-full h-[40px]  text-[14px] flex justify-start items-center px-[10px]",
             "hover:bg-[#383b45] rounded-[4px] hover:cursor-pointer",
+            "border-b-[1px] border-solid border-[#383b45]",
             currentCate.name === item.name ? "bg-[#383b45]" : "",
           )}
           onClick={() => handleClick(item)}
         >
-          {item.name.length > 8 ? item.name.slice(0, 10) + "..." : item.name}
+          {item.name.length > 12 ? item.name.slice(0, 12) + "..." : item.name}
         </div>
       ))}
     </div>
