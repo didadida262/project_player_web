@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useResources } from "../provider/resource-context";
-import { Image } from "antd";
 
 export default function AudioContainer() {
   const { currentfileurl, currentFile, selectFile } = useResources();
