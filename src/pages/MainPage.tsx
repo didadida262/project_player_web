@@ -42,12 +42,20 @@ export default function MainPage(props: IProps) {
         </div>
         <div className="w-[calc(100%_-_195px)] h-full flex flex-col justify-between items-center markBorderT">
           <div className=" w-full h-[calc(100%_-_135px)] px-[8px] py-[8px] ">
-            <VideoContainer />
-            {/* {currentFile.type === "video" && <VideoContainer />}
-            {currentFile.type === "image" && <ImgContainer />}
-            {currentFile.type === "audio" && <AudioContainer />}
-            {currentFile.type === "pdf" && <PdfContainer />} */}
+            {currentFile.type && currentFile.type.includes("mp4") && (
+              <VideoContainer />
+            )}
+            {currentFile.type && currentFile.type.includes("image") && (
+              <ImgContainer />
+            )}
+            {currentFile.type && currentFile.type.includes("audio") && (
+              <AudioContainer />
+            )}
+            {currentFile.type && currentFile.type.includes("pdf") && (
+              <PdfContainer />
+            )}
           </div>
+
           <div className="Filelist w-full h-[130px]">
             <FileList />
           </div>

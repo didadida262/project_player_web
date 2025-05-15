@@ -77,9 +77,19 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
     setcurrentfileurl(url);
   };
 
+  const handleStreamFile = (file: any) => {
+    setcurrentfileurl(`http://localhost:3001/video?path=${file.path}`);
+  };
   const selectFile = (file: TFile) => {
     console.log("selectFile>>>>", file);
-    setcurrentfileurl(`http://localhost:3001/video?path=${file.path}`);
+    switch (file.type) {
+      case "application/mp4":
+      case "audio/mpeg":
+        handleStreamFile(file);
+        break;
+      default:
+        break;
+    }
   };
   useEffect(() => {
     console.log("currentpath>>>", currentpath);
