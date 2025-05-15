@@ -78,6 +78,7 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleStreamFile = (file: any) => {
+    console.log("请求文件>>>", file);
     setcurrentfileurl(`http://localhost:3001/video?path=${file.path}`);
   };
   const selectFile = (file: TFile) => {

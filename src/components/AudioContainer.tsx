@@ -3,7 +3,12 @@ import { useResources } from "../provider/resource-context";
 import { Image } from "antd";
 
 export default function AudioContainer() {
-  const { currentfileurl } = useResources();
+  const { currentfileurl, currentFile, selectFile } = useResources();
+
+  useEffect(() => {
+    if (!currentFile.name) return;
+    selectFile(currentFile);
+  }, [currentFile]);
 
   return (
     <div className="w-full h-full flex justify-center items-center">
