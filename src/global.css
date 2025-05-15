@@ -76,25 +76,16 @@
 @tailwind utilities;
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-  /* 水平滚动条高度（即宽度） */
-  /* Y 轴滚动条宽度 */
+  width: 5px;
+  height: 5px;
 }
 
-::-webkit-scrollbar-track {
-  background: #555;
-  /* Y 轴滚动条轨道背景 */
-}
-
+/* 滚动处 */
 ::-webkit-scrollbar-thumb {
-  background: #383b45;
-  /* Y 轴滚动条滑块颜色 */
-  /* Y 轴滚动条滑块圆角 */
-  border: 1px solid #383b45;
+  border-radius: 4px;
+  background: #555;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #383b45;
-  /* Y 轴滚动条滑块悬停颜色 */
+  background: #555;
 }
