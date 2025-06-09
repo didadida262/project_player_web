@@ -32,7 +32,7 @@ export default function VideoContainer() {
     <div className="w-full h-full flex justify-between items-center flex-col">
       <div className="video w-full h-[calc(100%_-_55px)] selectedG flex justify-center items-center">
         <video
-          muted
+          muted={false}
           className="w-full h-full object-fit"
           autoPlay
           controls
