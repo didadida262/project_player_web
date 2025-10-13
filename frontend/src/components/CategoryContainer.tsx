@@ -30,7 +30,13 @@ export default function CategoryContainer() {
   };
 
   // 过滤出只有文件夹的项
-  const folderItems = categories.filter((item: any) => isDirectory(item.type));
+  console.log("categories>>>", categories);
+  const folderItems = categories.filter((item: any) => {
+    const isDir = isDirectory(item.type);
+    console.log(`Item: ${item.name}, type: ${item.type}, isDirectory: ${isDir}`);
+    return isDir;
+  });
+  console.log("folderItems>>>", folderItems);
 
   return (
     <div className="w-full h-full px-[8px] py-[8px] flex flex-col justify-start gap-y-2 overflow-y-auto">
