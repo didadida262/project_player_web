@@ -17,7 +17,7 @@ export const PathInputDialog: React.FC<PathInputDialogProps> = ({
   title = "选择文件夹路径",
   placeholder = "请输入文件夹路径..."
 }) => {
-  const [path, setPath] = useState("");
+  const [path, setPath] = useState("F:\\RESP");
 
   const handleConfirm = () => {
     if (path.trim()) {
