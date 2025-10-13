@@ -76,7 +76,7 @@ export default function MainPage(props: IProps) {
           <div 
             className="w-full px-[8px] py-[8px]"
             style={{ 
-              height: isBottomCollapsed ? 'calc(100% - 25px)' : 'calc(100% - 135px)' 
+              height: isBottomCollapsed ? 'calc(100% - 25px)' : 'calc(100% - 150px)' 
             }}
           >
             {currentFile.type && (currentFile.type.includes("mp4") || currentFile.type.includes("mpegurl") || currentFile.name?.toLowerCase().endsWith('.m3u8')) && (
@@ -118,7 +118,7 @@ export default function MainPage(props: IProps) {
             {!isBottomCollapsed && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 110, opacity: 1 }}
+                animate={{ height: 125, opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }}
                 className="w-full overflow-hidden"
