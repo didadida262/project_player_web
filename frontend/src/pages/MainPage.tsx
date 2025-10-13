@@ -17,7 +17,7 @@ interface IProps {}
 export default function MainPage(props: IProps) {
   const { currentpath, currentFile } = useResources();
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
-  const [isBottomCollapsed, setIsBottomCollapsed] = useState(false);
+  const [isBottomCollapsed, setIsBottomCollapsed] = useState(true);
 
   return (
     <div className="flex justify-between flex-col items-center w-full h-full px-[8x] py-[8px] text-[white]">

@@ -20,6 +20,12 @@ export default function CategoryContainer() {
     const res = (await getFiles(params)) as any;
     console.log("files>>>", res);
     setSourcelist(res);
+    
+    // 自动播放第一个文件
+    if (res && res.length > 0) {
+      const firstFile = res[0];
+      setCurrentFile(firstFile);
+    }
   };
 
   // 过滤出只有文件夹的项
