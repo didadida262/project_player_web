@@ -9,7 +9,6 @@ import {
 } from "react-icons/hi";
 import cn from "classnames";
 import { useResources } from "../provider/resource-context";
-import { useState, useRef } from "react";
 
 interface IProps {
   file: any;
@@ -66,67 +65,33 @@ const renderIcon = (type: string, fileName?: string) => {
 export default function FileItem(props: IProps) {
   const { currentFile, setCurrentFile } = useResources();
   const { file } = props;
-  const [showTooltip, setShowTooltip] = useState(false);
-  const itemRef = useRef<HTMLDivElement>(null);
 
   const handleClick = () => {
     console.log("select_file>>>", file);
     setCurrentFile(file);
   };
 
-  const handleMouseEnter = () => {
-    setShowTooltip(true);
-  };
-
-  const handleMouseLeave = () => {
-    setShowTooltip(false);
-  };
-
   return (
-    <>
-      <div
-        ref={itemRef}
-        className={cn(
-          "w-[120px] h-[110px] flex flex-col justify-between items-center hover:cursor-pointer relative",
-          "hover:border-[#0acaff] hover:border-[3px]",
-          currentFile.name === file.name
-            ? "border-[#0acaff] border-[3px] border-solid"
-            : "border-[1px] border-solid border-[#383b45]",
-          "mx-[8px]",
-        )}
-        style={{ display: "inline-block" }}
-        onClick={handleClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
+    <div
+      className={cn(
+        "w-[120px] h-[110px] flex flex-col justify-between items-center hover:cursor-pointer",
+        "hover:border-[#0acaff] hover:border-[3px]",
+        currentFile.name === file.name
+          ? "border-[#0acaff] border-[3px] border-solid"
+          : "border-[1px] border-solid border-[#383b45]",
+        "mx-[8px]",
+      )}
+      style={{ display: "inline-block" }}
+      onClick={handleClick}
+    >
       <div className="w-full h-[calc(100%_-_35px)] flex justify-center items-center text-[30px]">
         {renderIcon(file.type, file.name)}
       </div>
-        <div className="w-full h-[35px] flex justify-center items-center px-1">
-          <span className="text-[11px] text-white text-center leading-tight break-words">
-            {file.name.length > 10 ? file.name.slice(0, 10) + "..." : file.name}
-          </span>
-        </div>
+      <div className="w-full h-[35px] flex justify-center items-center px-1">
+        <span className="text-[11px] text-white text-center leading-tight break-words">
+          {file.name.length > 10 ? file.name.slice(0, 10) + "..." : file.name}
+        </span>
       </div>
-      
-      {/* 悬浮卡片 - 完全脱离容器 */}
-      {showTooltip && itemRef.current && (
-        <div 
-          className="fixed z-[9999] pointer-events-none"
-          style={{
-            left: itemRef.current.getBoundingClientRect().right + 8,
-            top: itemRef.current.getBoundingClientRect().top - 8,
-          }}
-        >
-          <div className="bg-gray-800 text-white px-2 py-1 rounded-lg shadow-lg border border-gray-600">
-            <p className="text-[11px] whitespace-nowrap">
-              {file.name}
-            </p>
-            {/* 小三角箭头 - 指向左侧 */}
-            <div className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-gray-800"></div>
-          </div>
-        </div>
-      )}
-    </>
+    </div>
   );
 }
