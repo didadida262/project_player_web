@@ -8,11 +8,15 @@ import AudioContainer from "../components/AudioContainer";
 import PdfContainer from "../components/PdfContainer";
 import EmptyPlayer from "../components/EmptyPlayer";
 import { Label } from "../components/ui/label";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 
 interface IProps {}
 
 export default function MainPage(props: IProps) {
   const { currentpath, currentFile } = useResources();
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
 
   return (
     <div className="flex justify-between flex-col items-center w-full h-full px-[8x] py-[8px] text-[white]">
@@ -28,11 +32,46 @@ export default function MainPage(props: IProps) {
           </span>
         </div>
       </div>
-      <div className="content w-full h-[calc(100%_-_45px)]  px-[5px] py-[5px] flex justify-between items-center">
-        <div className="cate w-[190px] h-full markBorderT backdrop-blur-sm bg-black/20">
-          <CategoryContainer />
+      <div className="content w-full h-[calc(100%_-_45px)] px-[5px] py-[5px] flex items-center">
+        {/* 左侧文件夹容器 */}
+        <AnimatePresence>
+          {!isLeftCollapsed && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 190, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="h-full markBorderT backdrop-blur-sm bg-black/20 overflow-hidden"
+            >
+              <CategoryContainer />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* 收起/展开按钮 */}
+        <div 
+          className="w-[20px] h-full flex items-center justify-center cursor-pointer hover:bg-gray-700/50 transition-colors"
+          onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
+        >
+          <motion.div
+            animate={{ rotate: isLeftCollapsed ? 0 : 180 }}
+            transition={{ duration: 0.2 }}
+          >
+            {isLeftCollapsed ? (
+              <HiChevronRight className="text-white text-[16px]" />
+            ) : (
+              <HiChevronLeft className="text-white text-[16px]" />
+            )}
+          </motion.div>
         </div>
-        <div className="w-[calc(100%_-_195px)] h-full flex flex-col justify-between items-center markBorderT backdrop-blur-sm bg-black/20">
+
+        {/* 右侧内容区域 */}
+        <div 
+          className="h-full flex flex-col justify-between items-center markBorderT backdrop-blur-sm bg-black/20"
+          style={{ 
+            width: isLeftCollapsed ? 'calc(100% - 25px)' : 'calc(100% - 215px)' 
+          }}
+        >
           <div className=" w-full h-[calc(100%_-_135px)] px-[8px] py-[8px] ">
             {currentFile.type && (currentFile.type.includes("mp4") || currentFile.type.includes("mpegurl") || currentFile.name?.toLowerCase().endsWith('.m3u8')) && (
               <VideoContainer />
