@@ -14,8 +14,8 @@ export default function FileList() {
       const selectedIndex = sourcelist.findIndex(file => file.name === currentFile.name)
       
       if (selectedIndex !== -1) {
-        // 计算每个文件项的宽度（100px + 10px margin）
-        const itemWidth = 110
+        // 计算每个文件项的宽度（120px + 16px margin）
+        const itemWidth = 136
         const scrollLeft = selectedIndex * itemWidth
         
         // 平滑滚动到选中项
