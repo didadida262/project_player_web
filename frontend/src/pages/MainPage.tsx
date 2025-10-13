@@ -10,13 +10,14 @@ import EmptyPlayer from "../components/EmptyPlayer";
 import { Label } from "../components/ui/label";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
+import { HiChevronLeft, HiChevronRight, HiChevronDown, HiChevronUp } from "react-icons/hi";
 
 interface IProps {}
 
 export default function MainPage(props: IProps) {
   const { currentpath, currentFile } = useResources();
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
+  const [isBottomCollapsed, setIsBottomCollapsed] = useState(false);
 
   return (
     <div className="flex justify-between flex-col items-center w-full h-full px-[8x] py-[8px] text-[white]">
@@ -72,7 +73,12 @@ export default function MainPage(props: IProps) {
             width: isLeftCollapsed ? 'calc(100% - 25px)' : 'calc(100% - 215px)' 
           }}
         >
-          <div className=" w-full h-[calc(100%_-_135px)] px-[8px] py-[8px] ">
+          <div 
+            className="w-full px-[8px] py-[8px]"
+            style={{ 
+              height: isBottomCollapsed ? 'calc(100% - 25px)' : 'calc(100% - 135px)' 
+            }}
+          >
             {currentFile.type && (currentFile.type.includes("mp4") || currentFile.type.includes("mpegurl") || currentFile.name?.toLowerCase().endsWith('.m3u8')) && (
               <VideoContainer />
             )}
@@ -90,9 +96,37 @@ export default function MainPage(props: IProps) {
             )}
           </div>
 
-          <div className="Filelist w-full h-[130px]">
-            <FileList />
+          {/* 底部收起/展开按钮 */}
+          <div 
+            className="w-full h-[20px] flex items-center justify-center cursor-pointer hover:bg-gray-700/50 transition-colors"
+            onClick={() => setIsBottomCollapsed(!isBottomCollapsed)}
+          >
+            <motion.div
+              animate={{ rotate: isBottomCollapsed ? 0 : 180 }}
+              transition={{ duration: 0.2 }}
+            >
+              {isBottomCollapsed ? (
+                <HiChevronUp className="text-white text-[16px]" />
+              ) : (
+                <HiChevronDown className="text-white text-[16px]" />
+              )}
+            </motion.div>
           </div>
+
+          {/* 底部文件列表 */}
+          <AnimatePresence>
+            {!isBottomCollapsed && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 110, opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="w-full overflow-hidden"
+              >
+                <FileList />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
