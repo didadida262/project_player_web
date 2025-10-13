@@ -8,7 +8,7 @@ import { useResources } from '../provider/resource-context'
 // pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
 
 export default function PdfContainer() {
-  const { currentfileurl } = useResources()
+  const { currentfileurl, currentFile } = useResources()
   const [numPages, setNumPages] = useState<number | null>(null)
 
   useEffect(() => {
@@ -16,13 +16,23 @@ export default function PdfContainer() {
   }, [currentfileurl])
 
   return (
-    <div className="w-full h-full flex justify-center items-center overflow-y-auto">
-      <iframe
-        src={currentfileurl}
-        width="100%"
-        height="500px"
-        title="PDF Viewer"
-      />
+    <div className="w-full h-full flex flex-col justify-center items-center overflow-y-auto">
+      <div className="w-full h-[calc(100%_-_40px)] flex justify-center items-center">
+        <iframe
+          src={currentfileurl}
+          width="100%"
+          height="100%"
+          title="PDF Viewer"
+        />
+      </div>
+      {/* 文件名显示区域 */}
+      {currentFile.name && (
+        <div className="w-full h-[40px] px-4 py-2 bg-black/40 backdrop-blur-sm flex items-center">
+          <p className="text-white text-[14px] truncate w-full" title={currentFile.name}>
+            {currentFile.name}
+          </p>
+        </div>
+      )}
       {/* <Document
         file={currentfileurl}
         onLoadSuccess={({ numPages }) => setNumPages(numPages)}

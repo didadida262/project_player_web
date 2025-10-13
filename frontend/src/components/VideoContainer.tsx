@@ -103,7 +103,7 @@ export default function VideoContainer() {
 
   return (
     <div className="w-full h-full flex justify-between items-center flex-col">
-      <div className="video w-full h-[calc(100%_-_55px)] selectedG flex justify-center items-center rounded-lg overflow-hidden border border-white/10">
+      <div className="video w-full h-[calc(100%_-_85px)] selectedG flex flex-col justify-center items-center rounded-lg overflow-hidden border border-white/10">
         <video
           ref={videoRef}
           muted={false}
@@ -112,6 +112,14 @@ export default function VideoContainer() {
           controls
           onEnded={handleNext} // 直接监听结束事件
         />
+        {/* 文件名显示区域 */}
+        {currentFile.name && (
+          <div className="w-full px-4 py-2 bg-black/40 backdrop-blur-sm">
+            <p className="text-white text-[14px] truncate" title={currentFile.name}>
+              {currentFile.name}
+            </p>
+          </div>
+        )}
       </div>
       <div className="operation w-full h-[50px] flex justify-start items-center gap-x-[10px]">
         {palyerMode === "order" ? (
