@@ -101,6 +101,25 @@ export default function VideoContainer() {
     selectFile(currentFile);
   }, [currentFile]);
 
+  // 添加键盘快捷键监听
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // 按下方向键下时，切换到下一首
+      if (event.key === 'ArrowDown') {
+        event.preventDefault(); // 阻止默认行为
+        handleNext();
+      }
+    };
+
+    // 添加键盘事件监听器
+    document.addEventListener('keydown', handleKeyDown);
+
+    // 清理函数：组件卸载时移除事件监听器
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentFile]); // 依赖currentFile，确保handleNext函数是最新的
+
   return (
     <div className="w-full h-full flex flex-col">
       {/* 文件名显示区域 - 移到视频上方 */}
