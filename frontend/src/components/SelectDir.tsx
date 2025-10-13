@@ -36,11 +36,21 @@ export default function SelectDir(props: IProps) {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      // 获取第一个文件的目录路径
+      // 获取第一个文件的完整路径
       const file = files[0];
-      const path = file.webkitRelativePath || file.name;
-      // 提取目录路径（去掉文件名）
-      const directoryPath = path.substring(0, path.lastIndexOf('/')) || '/';
+      // 使用 File API 获取文件的完整路径
+      const fullPath = (file as any).path || file.webkitRelativePath || file.name;
+      
+      // 如果是相对路径，提取目录部分
+      let directoryPath = fullPath;
+      if (fullPath.includes('/')) {
+        directoryPath = fullPath.substring(0, fullPath.lastIndexOf('/'));
+      } else if (fullPath.includes('\\')) {
+        directoryPath = fullPath.substring(0, fullPath.lastIndexOf('\\'));
+      }
+      
+      console.log("选择的文件路径:", fullPath);
+      console.log("提取的目录路径:", directoryPath);
       setCurrentpath(directoryPath);
     }
     // 清空input值，允许重复选择同一个文件
