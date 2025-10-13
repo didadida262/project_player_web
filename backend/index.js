@@ -4,9 +4,25 @@ const path = require('path');
 const cors = require('cors'); // 引入 CORS 模块
 const mime = require('mime-types'); // 需要安装：npm install mime-types
 
-
 const app = express();
 const PORT = 3001;
+
+// 全局错误处理
+process.on('uncaughtException', (error) => {
+    console.error('未捕获的异常:', error);
+    console.log('服务将在3秒后自动重启...');
+    setTimeout(() => {
+        process.exit(1);
+    }, 3000);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('未处理的Promise拒绝:', reason);
+    console.log('服务将在3秒后自动重启...');
+    setTimeout(() => {
+        process.exit(1);
+    }, 3000);
+});
 
 // 使用 CORS 中间件
 app.use(cors({
@@ -69,6 +85,15 @@ async function readDirectory(dirPath) {
         return [];
     }
 }
+
+// 健康检查端点
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+    });
+});
 
 app.get('/getFiles', async (req, res) => {
     const files = await readDirectory(req.query.path || 'D:\\RESP');
