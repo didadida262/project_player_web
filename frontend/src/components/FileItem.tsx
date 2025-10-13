@@ -97,15 +97,15 @@ export default function FileItem(props: IProps) {
         </span>
       </div>
       
-      {/* 悬浮卡片 */}
+      {/* 悬浮卡片 - 右上方 */}
       {showTooltip && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-[9999]">
+        <div className="absolute top-0 right-full mr-2 z-[9999]">
           <div className="bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg border border-gray-600">
             <p className="text-sm whitespace-nowrap">
               {file.name}
             </p>
-            {/* 小三角箭头 */}
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+            {/* 小三角箭头 - 指向右侧 */}
+            <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-800"></div>
           </div>
         </div>
       )}
