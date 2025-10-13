@@ -49,42 +49,42 @@ export const PathInputDialog: React.FC<PathInputDialogProps> = ({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-gray-900 border border-gray-700 rounded-lg p-6 w-96 max-w-[90vw]"
+            className="bg-gray-900 border border-gray-700 rounded-lg p-4 w-80 max-w-[90vw]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-white text-lg font-semibold mb-4">{title}</h3>
+            <h3 className="text-white text-sm font-semibold mb-3">{title}</h3>
             
-            <div className="mb-4">
+            <div className="mb-3">
               <input
                 type="text"
                 value={path}
                 onChange={(e) => setPath(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder={placeholder}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                className="w-full px-2 py-1.5 bg-gray-800 border border-gray-600 rounded text-xs text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                 autoFocus
               />
             </div>
 
-            <div className="text-sm text-gray-400 mb-4">
+            <div className="text-xs text-gray-400 mb-3">
               示例路径：
               <br />
-              Windows: <code className="bg-gray-800 px-1 rounded">C:\Users\YourName\Documents</code>
+              Windows: <code className="bg-gray-800 px-1 rounded text-xs">C:\Users\YourName\Documents</code>
               <br />
-              Mac/Linux: <code className="bg-gray-800 px-1 rounded">/Users/YourName/Documents</code>
+              Mac/Linux: <code className="bg-gray-800 px-1 rounded text-xs">/Users/YourName/Documents</code>
             </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-2">
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                className="px-3 py-1.5 text-xs text-gray-400 hover:text-white transition-colors"
               >
                 取消
               </button>
               <button
                 onClick={handleConfirm}
                 disabled={!path.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 确定
               </button>
