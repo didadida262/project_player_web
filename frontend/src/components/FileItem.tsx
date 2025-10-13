@@ -14,7 +14,24 @@ interface IProps {
   file: any;
 }
 type FileType = "directory" | "video" | "word" | "pdf" | "image" | "audio";
-const renderIcon = (type: FileType) => {
+const renderIcon = (type: string) => {
+  // 处理MIME类型和简单类型
+  let fileType = type;
+  
+  if (type === 'dir') {
+    fileType = 'directory';
+  } else if (type && type.includes('video')) {
+    fileType = 'video';
+  } else if (type && type.includes('image')) {
+    fileType = 'image';
+  } else if (type && type.includes('audio')) {
+    fileType = 'audio';
+  } else if (type && type.includes('pdf')) {
+    fileType = 'pdf';
+  } else if (type && (type.includes('word') || type.includes('document'))) {
+    fileType = 'word';
+  }
+
   const mapIcon = {
     directory: <HiFolder className="text-yellow-400" />,
     video: <HiPlay className="text-red-500" />,
@@ -23,7 +40,7 @@ const renderIcon = (type: FileType) => {
     image: <HiPhotograph className="text-green-400" />,
     audio: <HiMusicNote className="text-purple-400" />,
   };
-  return mapIcon[type] ? mapIcon[type] : <HiQuestionMarkCircle className="text-gray-400" />;
+  return mapIcon[fileType as keyof typeof mapIcon] || <HiQuestionMarkCircle className="text-gray-400" />;
 };
 export default function FileItem(props: IProps) {
   const { currentFile, setCurrentFile, currentfileurl, setcurrentfileurl } =
