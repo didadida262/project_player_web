@@ -9,11 +9,12 @@ import {
 } from "react-icons/hi";
 import cn from "classnames";
 import { useResources } from "../provider/resource-context";
+import { useState } from "react";
 
 interface IProps {
   file: any;
 }
-type FileType = "directory" | "video" | "word" | "pdf" | "image" | "audio";
+// type FileType = "directory" | "video" | "word" | "pdf" | "image" | "audio";
 const renderIcon = (type: string, fileName?: string) => {
   // 处理MIME类型和简单类型
   let fileType = type;
@@ -63,9 +64,9 @@ const renderIcon = (type: string, fileName?: string) => {
   return mapIcon[fileType as keyof typeof mapIcon] || <HiQuestionMarkCircle className="text-gray-400" />;
 };
 export default function FileItem(props: IProps) {
-  const { currentFile, setCurrentFile, currentfileurl, setcurrentfileurl } =
-    useResources();
+  const { currentFile, setCurrentFile } = useResources();
   const { file } = props;
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const handleClick = () => {
     console.log("select_file>>>", file);
@@ -75,7 +76,7 @@ export default function FileItem(props: IProps) {
   return (
     <div
       className={cn(
-        "w-[120px] h-[110px] flex flex-col justify-between items-center hover:cursor-pointer",
+        "w-[120px] h-[110px] flex flex-col justify-between items-center hover:cursor-pointer relative",
         "hover:border-[#0acaff] hover:border-[3px]",
         currentFile.name === file.name
           ? "border-[#0acaff] border-[3px] border-solid"
@@ -84,15 +85,30 @@ export default function FileItem(props: IProps) {
       )}
       style={{ display: "inline-block" }}
       onClick={handleClick}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
     >
       <div className="w-full h-[calc(100%_-_35px)] flex justify-center items-center text-[30px]">
         {renderIcon(file.type, file.name)}
       </div>
       <div className="w-full h-[35px] flex justify-center items-center px-1">
         <span className="text-[11px] text-white text-center leading-tight break-words">
-          {file.name.length > 18 ? file.name.slice(0, 18) + "..." : file.name}
+          {file.name.length > 10 ? file.name.slice(0, 10) + "..." : file.name}
         </span>
       </div>
+      
+      {/* 悬浮卡片 */}
+      {showTooltip && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
+          <div className="bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg border border-gray-600 max-w-xs">
+            <p className="text-sm whitespace-nowrap">
+              {file.name}
+            </p>
+            {/* 小三角箭头 */}
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
