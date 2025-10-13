@@ -14,6 +14,7 @@ export default function SelectDir(props: IProps) {
   const handleSelectDirectory = async () => {
     if (!currentpath) {
       // 如果没有选择路径，触发原生文件选择对话框
+      // 用户需要选择目标目录下的任意一个文件，我们会提取目录路径
       fileInputRef.current?.click();
       return;
     }
