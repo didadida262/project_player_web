@@ -47,18 +47,27 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
 
   const getNextVideo = () => {
     //   播放结束，根据当前播放模式，选择下一个
+    if (sourcelist.length === 0) {
+      return null;
+    }
+    
     const currentIndex = sourcelist.findIndex(
       (item) => item.name === currentFile.name,
     );
-    let nextFileIndex =
-      palyerMode === "order"
-        ? currentIndex + 1
-        : Math.random() * sourcelist.length;
-    if (nextFileIndex >= sourcelist.length) {
-      nextFileIndex = 0;
+    let nextFileIndex;
+    
+    if (palyerMode === "order") {
+      nextFileIndex = currentIndex + 1;
+      if (nextFileIndex >= sourcelist.length) {
+        nextFileIndex = 0;
+      }
+    } else {
+      // 随机播放模式
+      nextFileIndex = Math.floor(Math.random() * sourcelist.length);
     }
+    
     const nextFile = sourcelist[nextFileIndex];
-    return nextFile;
+    return nextFile || null;
   };
 
   const handleVideoFile = (file: BlobPart) => {

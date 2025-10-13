@@ -17,7 +17,9 @@ export default function VideoContainer() {
   };
   const handleNext = () => {
     const nextFile = getNextVideo();
-    setCurrentFile(nextFile);
+    if (nextFile) {
+      setCurrentFile(nextFile);
+    }
   };
 
   useEffect(() => {}, [currentfileurl]);
