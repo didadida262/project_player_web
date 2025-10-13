@@ -92,7 +92,7 @@ export default function VideoContainer() {
             e.currentTarget.style.backgroundColor = "#10b981";
           }}
         >
-          下一首
+          下一个
         </button>
       </div>
     </div>
