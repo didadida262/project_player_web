@@ -9,8 +9,17 @@ export default function ImgContainer() {
     <div className="w-full h-full flex flex-col justify-center items-center rounded-lg overflow-hidden border border-white/10 bg-black/40">
       {/* 文件名显示区域 - 移到图片上方 */}
       {currentFile.name && (
-        <div className="w-full h-[40px] px-4 py-2 bg-black/40 backdrop-blur-sm flex items-center rounded-t-lg overflow-hidden">
-          <p className="text-white text-[14px] truncate w-full block" title={currentFile.name}>
+        <div className="w-full h-[40px] px-4 py-2 bg-black/40 backdrop-blur-sm flex items-center rounded-t-lg">
+          <p 
+            className="text-white text-[14px]" 
+            title={currentFile.name}
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              maxWidth: '100%'
+            }}
+          >
             {currentFile.name}
           </p>
         </div>
