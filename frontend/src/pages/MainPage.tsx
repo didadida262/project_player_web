@@ -34,7 +34,7 @@ export default function MainPage(props: IProps) {
         </div>
         <div className="w-[calc(100%_-_195px)] h-full flex flex-col justify-between items-center markBorderT backdrop-blur-sm bg-black/20">
           <div className=" w-full h-[calc(100%_-_135px)] px-[8px] py-[8px] ">
-            {currentFile.type && currentFile.type.includes("mp4") && (
+            {currentFile.type && (currentFile.type.includes("mp4") || currentFile.type.includes("mpegurl") || currentFile.name?.toLowerCase().endsWith('.m3u8')) && (
               <VideoContainer />
             )}
             {currentFile.type && currentFile.type.includes("image") && (

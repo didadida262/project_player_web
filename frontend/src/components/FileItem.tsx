@@ -33,7 +33,7 @@ const renderIcon = (type: string, fileName?: string) => {
   } else if (fileName) {
     // 如果MIME类型无法识别，通过文件扩展名判断
     const ext = fileName.toLowerCase().split('.').pop();
-    const videoExts = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', '3gp', 'mpg', 'mpeg'];
+    const videoExts = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', '3gp', 'mpg', 'mpeg', 'm3u8'];
     const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
     const audioExts = ['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a'];
     const pdfExts = ['pdf'];

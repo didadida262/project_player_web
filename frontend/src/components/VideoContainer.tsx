@@ -39,7 +39,11 @@ export default function VideoContainer() {
           controls
           src={currentfileurl}
           onEnded={handleNext} // 直接监听结束事件
-        />
+        >
+          {currentFile.name?.toLowerCase().endsWith('.m3u8') && (
+            <source src={currentfileurl} type="application/vnd.apple.mpegurl" />
+          )}
+        </video>
       </div>
       <div className="operation w-full h-[50px] flex justify-start items-center gap-x-[10px]">
         {palyerMode === "order" ? (

@@ -95,6 +95,8 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
     switch (file.type) {
       case "application/mp4":
       case "audio/mpeg":
+      case "application/vnd.apple.mpegurl":
+      case "application/x-mpegURL":
         handleStreamFile(file);
         break;
       default:
