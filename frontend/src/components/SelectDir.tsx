@@ -39,9 +39,9 @@ export default function SelectDir(props: IProps) {
       // 获取第一个文件的完整路径
       const file = files[0];
       // 使用 File API 获取文件的完整路径
-      const fullPath = (file as any).path || file.webkitRelativePath || file.name;
+      const fullPath = (file as any).path || file.name;
       
-      // 如果是相对路径，提取目录部分
+      // 提取目录部分（去掉文件名）
       let directoryPath = fullPath;
       if (fullPath.includes('/')) {
         directoryPath = fullPath.substring(0, fullPath.lastIndexOf('/'));
@@ -67,9 +67,6 @@ export default function SelectDir(props: IProps) {
       <input
         ref={fileInputRef}
         type="file"
-        webkitdirectory=""
-        directory=""
-        multiple
         style={{ display: 'none' }}
         onChange={handleFileSelect}
       />
