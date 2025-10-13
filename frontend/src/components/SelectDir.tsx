@@ -13,8 +13,7 @@ export default function SelectDir(props: IProps) {
 
   const handleSelectDirectory = async () => {
     if (!currentpath) {
-      // 如果没有选择路径，触发原生文件选择对话框
-      // 用户需要选择目标目录下的任意一个文件，我们会提取目录路径
+      // 如果没有选择路径，触发原生文件夹选择对话框
       fileInputRef.current?.click();
       return;
     }
@@ -40,7 +39,7 @@ export default function SelectDir(props: IProps) {
       // 获取第一个文件的完整路径
       const file = files[0];
       // 使用 File API 获取文件的完整路径
-      const fullPath = (file as any).path || file.name;
+      const fullPath = (file as any).path || file.webkitRelativePath || file.name;
       
       // 提取目录部分（去掉文件名）
       let directoryPath = fullPath;
@@ -50,11 +49,10 @@ export default function SelectDir(props: IProps) {
         directoryPath = fullPath.substring(0, fullPath.lastIndexOf('\\'));
       }
       
-      console.log("选择的文件路径:", fullPath);
-      console.log("提取的目录路径:", directoryPath);
+      console.log("选择的文件夹路径:", directoryPath);
       setCurrentpath(directoryPath);
     }
-    // 清空input值，允许重复选择同一个文件
+    // 清空input值，允许重复选择同一个文件夹
     event.target.value = '';
   };
 
@@ -64,10 +62,13 @@ export default function SelectDir(props: IProps) {
 
   return (
     <>
-      {/* 隐藏的文件输入框 */}
+      {/* 隐藏的文件输入框 - 用于选择文件夹 */}
       <input
         ref={fileInputRef}
         type="file"
+        webkitdirectory=""
+        directory=""
+        multiple
         style={{ display: 'none' }}
         onChange={handleFileSelect}
       />
