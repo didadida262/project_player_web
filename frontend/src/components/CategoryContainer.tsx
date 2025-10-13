@@ -5,10 +5,14 @@ import { IPCInfo } from "../utils/index";
 import { getFiles } from "@/api/common";
 
 export default function CategoryContainer() {
-  const { categories, setSourcelist, currentCate, setCurrentCate } =
+  const { categories, setSourcelist, currentCate, setCurrentCate, setCurrentFile, setcurrentfileurl } =
     useResources();
 
   const handleClick = async (file: any) => {
+    // 清空当前播放的文件和URL
+    setCurrentFile({});
+    setcurrentfileurl('');
+    
     setCurrentCate(file);
     const params = {
       path: file.path,
