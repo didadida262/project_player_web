@@ -7,11 +7,6 @@ export default function HeaderComponent() {
       {/* 深灰色背景 */}
       <div className="absolute inset-0 bg-gray-800"></div>
       
-      {/* 动态光效 */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
-      </div>
       
       {/* 内容 */}
       <div className="relative z-10 flex items-center px-common h-full">
