@@ -28,23 +28,15 @@ export default function FileList() {
   }, [currentFile.name, sourcelist])
 
   return (
-    <div className="w-full h-full flex flex-col">
-      {/* 标题栏 */}
-      <div className="flex items-center justify-between px-[8px] py-[8px]">
-        <span className="text-white text-[14px] font-medium">文件列表</span>
-      </div>
-
-      {/* 文件列表 */}
-      <div className="overflow-hidden flex-1">
-        <div
-          ref={scrollContainerRef}
-          className={cn('w-full h-full', 'overflow-x-auto')}
-          style={{ whiteSpace: 'nowrap' }}
-        >
-          {sourcelist.map((file: any, index: number) => (
-            <FileItem file={file} key={index}></FileItem>
-          ))}
-        </div>
+    <div className="w-full h-full">
+      <div
+        ref={scrollContainerRef}
+        className={cn('w-full h-full', 'overflow-x-auto')}
+        style={{ whiteSpace: 'nowrap' }}
+      >
+        {sourcelist.map((file: any, index: number) => (
+          <FileItem file={file} key={index}></FileItem>
+        ))}
       </div>
     </div>
   )
