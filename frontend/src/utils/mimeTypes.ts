@@ -117,7 +117,8 @@ export function getFileCategory(mimeType: string): string {
       lowerMimeType.includes('gzip')) {
     return FILE_TYPE_CATEGORIES.ARCHIVE;
   }
-  if (lowerMimeType === ALL_MIME_TYPES.DIRECTORY.toLowerCase()) {
+  if (lowerMimeType === ALL_MIME_TYPES.DIRECTORY.toLowerCase() || 
+      lowerMimeType === 'directory') {
     return FILE_TYPE_CATEGORIES.DIRECTORY;
   }
   
