@@ -99,8 +99,8 @@ export default function FileItem(props: IProps) {
       
       {/* 悬浮卡片 */}
       {showTooltip && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
-          <div className="bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg border border-gray-600 max-w-xs">
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-[9999]">
+          <div className="bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg border border-gray-600">
             <p className="text-sm whitespace-nowrap">
               {file.name}
             </p>

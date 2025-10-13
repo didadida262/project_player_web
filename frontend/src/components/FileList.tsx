@@ -32,7 +32,10 @@ export default function FileList() {
       <div
         ref={scrollContainerRef}
         className={cn('w-full h-full', 'overflow-x-auto')}
-        style={{ whiteSpace: 'nowrap' }}
+        style={{ 
+          whiteSpace: 'nowrap',
+          overflowY: 'visible' // 允许垂直方向显示悬浮卡片
+        }}
       >
         {sourcelist.map((file: any, index: number) => (
           <FileItem file={file} key={index}></FileItem>
