@@ -7,6 +7,7 @@ import {
 } from "react";
 import api from "../api/index";
 import { IPCInfo } from "../utils/index";
+import { isVideoFile } from "../utils/mimeTypes";
 
 export interface TFile {
   name: string;
@@ -93,7 +94,7 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
   const selectFile = (file: TFile) => {
     console.log("selectFile>>>>", file);
     switch (file.type) {
-      case "application/mp4":
+      case "video/mp4":
       case "audio/mpeg":
       case "application/vnd.apple.mpegurl":
       case "application/x-mpegURL":

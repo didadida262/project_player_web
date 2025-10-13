@@ -2,7 +2,12 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors'); // 引入 CORS 模块
-const mime = require('mime-types'); // 需要安装：npm install mime-types
+const { 
+  getMimeTypeFromExtension, 
+  getFileCategory, 
+  isDirectory,
+  FILE_TYPE_CATEGORIES 
+} = require('./mimeTypes');
 
 const app = express();
 const PORT = 3001;
@@ -71,10 +76,10 @@ async function readDirectory(dirPath) {
         const files = [];
         for (const entry of entries) {
             const fullPath = path.join(dirPath, entry.name);
-            const fileType = mime.contentType(path.extname(entry.name)) || 'application/octet-stream';
+            const fileType = entry.isDirectory() ? FILE_TYPE_CATEGORIES.DIRECTORY : getMimeTypeFromExtension(entry.name);
             files.push({
                 name: entry.name,
-                type: entry.isDirectory() ? 'dir' : fileType,
+                type: fileType,
                 path: fullPath
             });
         }
@@ -106,7 +111,7 @@ app.get('/video', (req, res) => {
     const stat = fs.statSync(videoPath);
     const fileSize = stat.size;
     const range = req.headers.range;
-    const contentType = mime.contentType(path.extname(videoPath)) || 'application/octet-stream';
+    const contentType = getMimeTypeFromExtension(videoPath);
     console.log('contentType>>', contentType)
 
 

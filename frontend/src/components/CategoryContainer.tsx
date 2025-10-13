@@ -3,6 +3,7 @@ import cn from "classnames";
 import api from "../api/index";
 import { IPCInfo } from "../utils/index";
 import { getFiles } from "@/api/common";
+import { isDirectory } from "../utils/mimeTypes";
 
 export default function CategoryContainer() {
   const { categories, setSourcelist, currentCate, setCurrentCate, setCurrentFile, setcurrentfileurl } =
@@ -29,7 +30,7 @@ export default function CategoryContainer() {
   };
 
   // 过滤出只有文件夹的项
-  const folderItems = categories.filter((item: any) => item.type === 'dir');
+  const folderItems = categories.filter((item: any) => isDirectory(item.type));
 
   return (
     <div className="w-full h-full px-[8px] py-[8px] flex flex-col justify-start gap-y-2 overflow-y-auto">

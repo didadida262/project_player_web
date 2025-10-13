@@ -11,6 +11,7 @@ import { Label } from "../components/ui/label";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiChevronLeft, HiChevronRight, HiChevronDown, HiChevronUp } from "react-icons/hi";
+import { isVideoFile, isImageFile, isAudioFile, isDocumentFile } from "../utils/mimeTypes";
 
 interface IProps {}
 
@@ -79,16 +80,16 @@ export default function MainPage(props: IProps) {
               height: isBottomCollapsed ? 'calc(100% - 25px)' : 'calc(100% - 150px)' 
             }}
           >
-            {currentFile.type && (currentFile.type.includes("mp4") || currentFile.type.includes("mpegurl") || currentFile.name?.toLowerCase().endsWith('.m3u8')) && (
+            {currentFile.type && isVideoFile(currentFile.type) && (
               <VideoContainer />
             )}
-            {currentFile.type && currentFile.type.includes("image") && (
+            {currentFile.type && isImageFile(currentFile.type) && (
               <ImgContainer />
             )}
-            {currentFile.type && currentFile.type.includes("audio") && (
+            {currentFile.type && isAudioFile(currentFile.type) && (
               <AudioContainer />
             )}
-            {currentFile.type && currentFile.type.includes("pdf") && (
+            {currentFile.type && isDocumentFile(currentFile.type) && (
               <PdfContainer />
             )}
             {(!currentFile.type || !currentFile.name) && (

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useResources } from "../provider/resource-context";
 import Hls from "hls.js";
+import { isVideoFile } from "../utils/mimeTypes";
 
 export default function VideoContainer() {
   const {
@@ -31,7 +32,8 @@ export default function VideoContainer() {
     if (!currentfileurl || !videoRef.current) return;
 
     const video = videoRef.current;
-    const isM3u8 = currentFile.name?.toLowerCase().endsWith('.m3u8') || 
+    const isM3u8 = currentFile.type?.includes('mpegurl') || 
+                   currentFile.name?.toLowerCase().endsWith('.m3u8') || 
                    currentfileurl.includes('.m3u8');
 
     if (isM3u8) {
