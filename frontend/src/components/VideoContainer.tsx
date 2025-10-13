@@ -102,7 +102,7 @@ export default function VideoContainer() {
   }, [currentFile]);
 
   return (
-    <div className="w-full h-full flex justify-between items-center flex-col">
+    <div className="w-full h-full flex flex-col">
       {/* 文件名显示区域 - 移到视频上方 */}
       {currentFile.name && (
         <div className="w-full px-4 py-2 bg-black/40 backdrop-blur-sm rounded-t-lg">
@@ -120,7 +120,7 @@ export default function VideoContainer() {
           </p>
         </div>
       )}
-      <div className="video w-full h-[calc(100%_-_85px)] selectedG flex justify-center items-center rounded-lg overflow-hidden border border-white/10">
+      <div className="video w-full flex-1 selectedG flex justify-center items-center rounded-lg overflow-hidden border border-white/10">
         <video
           ref={videoRef}
           muted={false}
