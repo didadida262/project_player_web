@@ -51,7 +51,7 @@ export default function MainPage(props: IProps) {
 
         {/* 收起/展开按钮 */}
         <div 
-          className="w-[20px] h-full flex items-center justify-center cursor-pointer hover:bg-gray-700/50 transition-colors"
+          className="w-[20px] h-full flex items-center justify-center cursor-pointer hover:bg-[#383b45] transition-colors"
           onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
         >
           <motion.div
@@ -98,7 +98,7 @@ export default function MainPage(props: IProps) {
 
           {/* 底部收起/展开按钮 */}
           <div 
-            className="w-full h-[20px] flex items-center justify-center cursor-pointer hover:bg-gray-700/50 transition-colors"
+            className="w-full h-[20px] flex items-center justify-center cursor-pointer hover:bg-[#383b45] transition-colors"
             onClick={() => setIsBottomCollapsed(!isBottomCollapsed)}
           >
             <motion.div
