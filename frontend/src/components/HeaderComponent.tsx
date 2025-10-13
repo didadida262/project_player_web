@@ -4,9 +4,8 @@ import { BackgroundBeams } from "./ui/background-beams";
 export default function HeaderComponent() {
   return (
     <div className="relative w-full h-[80px] overflow-hidden">
-      {/* 炫酷背景 */}
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-blue-900/30 to-cyan-900/20"></div>
-      <BackgroundBeams className="absolute inset-0 opacity-60" />
+      {/* 浅灰色背景 */}
+      <div className="absolute inset-0 bg-gray-200"></div>
       
       {/* 动态光效 */}
       <div className="absolute inset-0">
@@ -17,7 +16,7 @@ export default function HeaderComponent() {
       {/* 内容 */}
       <div className="relative z-10 flex items-center px-common h-full">
         <motion.span 
-          className="text-[35px] font-bold bg-gradient-to-r from-white via-cyan-200 to-purple-200 bg-clip-text text-transparent"
+          className="text-[35px] font-bold text-gray-800"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
