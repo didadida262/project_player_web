@@ -6,6 +6,7 @@ import VideoContainer from "../components/VideoContainer";
 import ImgContainer from "../components/ImgContainer";
 import AudioContainer from "../components/AudioContainer";
 import PdfContainer from "../components/PdfContainer";
+import EmptyPlayer from "../components/EmptyPlayer";
 import { Label } from "../components/ui/label";
 
 interface IProps {}
@@ -44,6 +45,9 @@ export default function MainPage(props: IProps) {
             )}
             {currentFile.type && currentFile.type.includes("pdf") && (
               <PdfContainer />
+            )}
+            {(!currentFile.type || !currentFile.name) && (
+              <EmptyPlayer />
             )}
           </div>
 
