@@ -18,9 +18,12 @@ export default function CategoryContainer() {
     setSourcelist(res);
   };
 
+  // 过滤出只有文件夹的项
+  const folderItems = categories.filter((item: any) => item.type === 'dir');
+
   return (
     <div className="w-full h-full px-[8px] py-[8px] flex flex-col justify-start gap-y-2 overflow-y-auto ">
-      {categories.map((item: any, index: number) => (
+      {folderItems.map((item: any, index: number) => (
         <div
           key={index}
           className={cn(
