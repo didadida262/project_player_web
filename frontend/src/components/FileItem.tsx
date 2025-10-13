@@ -2,7 +2,7 @@ import {
   HiFolder,
   HiDocumentText,
   HiPhotograph,
-  HiVideoCamera,
+  HiPlay,
   HiDocument,
   HiMusicNote,
   HiQuestionMarkCircle,
@@ -17,7 +17,7 @@ type FileType = "directory" | "video" | "word" | "pdf" | "image" | "audio";
 const renderIcon = (type: FileType) => {
   const mapIcon = {
     directory: <HiFolder className="text-yellow-400" />,
-    video: <HiVideoCamera className="text-blue-400" />,
+    video: <HiPlay className="text-red-500" />,
     word: <HiDocumentText className="text-blue-500" />,
     pdf: <HiDocument className="text-red-400" />,
     image: <HiPhotograph className="text-green-400" />,
