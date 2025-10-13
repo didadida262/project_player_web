@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useResources } from "../provider/resource-context";
-import ShimmerButton from "./ui/shimmer-button";
 
 export default function VideoContainer() {
   const {
@@ -40,35 +39,59 @@ export default function VideoContainer() {
           onEnded={handleNext} // 直接监听结束事件
         />
       </div>
-      <div className="operation w-full h-[50px] flex justify-start items-center gap-x-[20px]">
+      <div className="operation w-full h-[50px] flex justify-start items-center gap-x-[10px]">
         {palyerMode === "order" ? (
-          <ShimmerButton 
+          <button 
             onClick={handlePlayMode}
-            className="px-6 py-2"
-            shimmerColor="#60a5fa"
-            background="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+            className="px-4 py-2 text-[18px] h-8 rounded-none text-white hover:opacity-90 transition-all flex items-center justify-center"
+            style={{ 
+              backgroundColor: "#3b82f6", // 蓝色
+              '--hover-color': "#2563eb"
+            } as React.CSSProperties}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#2563eb";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#3b82f6";
+            }}
           >
             顺序播放
-          </ShimmerButton>
+          </button>
         ) : (
-          <ShimmerButton 
+          <button 
             onClick={handlePlayMode}
-            className="px-6 py-2"
-            shimmerColor="#f472b6"
-            background="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+            className="px-4 py-2 text-[18px] h-8 rounded-none text-white hover:opacity-90 transition-all flex items-center justify-center"
+            style={{ 
+              backgroundColor: "#f59e0b", // 橙色
+              '--hover-color': "#d97706"
+            } as React.CSSProperties}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#d97706";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#f59e0b";
+            }}
           >
             随机播放
-          </ShimmerButton>
+          </button>
         )}
 
-        <ShimmerButton 
+        <button 
           onClick={handleNext}
-          className="px-6 py-2"
-          shimmerColor="#34d399"
-          background="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+          className="px-4 py-2 text-[18px] h-8 rounded-none text-white hover:opacity-90 transition-all flex items-center justify-center"
+          style={{ 
+            backgroundColor: "#10b981", // 绿色
+            '--hover-color': "#059669"
+          } as React.CSSProperties}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#059669";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#10b981";
+          }}
         >
           下一首
-        </ShimmerButton>
+        </button>
       </div>
     </div>
   );
