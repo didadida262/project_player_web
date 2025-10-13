@@ -14,7 +14,7 @@ interface IProps {
   file: any;
 }
 type FileType = "directory" | "video" | "word" | "pdf" | "image" | "audio";
-const renderIcon = (type: string) => {
+const renderIcon = (type: string, fileName?: string) => {
   // 处理MIME类型和简单类型
   let fileType = type;
   
@@ -30,6 +30,26 @@ const renderIcon = (type: string) => {
     fileType = 'pdf';
   } else if (type && (type.includes('word') || type.includes('document'))) {
     fileType = 'word';
+  } else if (fileName) {
+    // 如果MIME类型无法识别，通过文件扩展名判断
+    const ext = fileName.toLowerCase().split('.').pop();
+    const videoExts = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', '3gp', 'mpg', 'mpeg'];
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+    const audioExts = ['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a'];
+    const pdfExts = ['pdf'];
+    const docExts = ['doc', 'docx', 'txt', 'rtf'];
+    
+    if (videoExts.includes(ext || '')) {
+      fileType = 'video';
+    } else if (imageExts.includes(ext || '')) {
+      fileType = 'image';
+    } else if (audioExts.includes(ext || '')) {
+      fileType = 'audio';
+    } else if (pdfExts.includes(ext || '')) {
+      fileType = 'pdf';
+    } else if (docExts.includes(ext || '')) {
+      fileType = 'word';
+    }
   }
 
   const mapIcon = {
@@ -66,7 +86,7 @@ export default function FileItem(props: IProps) {
       onClick={handleClick}
     >
       <div className="w-full h-[calc(100%_-_30px)] flex justify-center items-center text-[30px]">
-        {renderIcon(file.type)}
+        {renderIcon(file.type, file.name)}
       </div>
       <div className="w-full h-[30px] flex justify-center items-center truncate text-[12px]">
         {file.name.length > 10 ? file.name.slice(0, 10) + "..." : file.name}
