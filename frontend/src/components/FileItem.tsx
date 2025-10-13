@@ -54,7 +54,7 @@ const renderIcon = (type: string, fileName?: string) => {
 
   const mapIcon = {
     directory: <HiFolder className="text-yellow-400" />,
-    video: <HiPlay className="text-red-500" />,
+    video: <HiPlay className="text-white" />,
     word: <HiDocumentText className="text-blue-500" />,
     pdf: <HiDocument className="text-red-400" />,
     image: <HiPhotograph className="text-green-400" />,
