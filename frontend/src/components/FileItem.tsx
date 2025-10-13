@@ -89,7 +89,7 @@ export default function FileItem(props: IProps) {
         {renderIcon(file.type, file.name)}
       </div>
       <div className="w-full h-[30px] flex justify-center items-center truncate text-[12px]">
-        {file.name.length > 12 ? file.name.slice(0, 12) + "..." : file.name}
+        {file.name.length > 15 ? file.name.slice(0, 15) + "..." : file.name}
       </div>
     </div>
   );
