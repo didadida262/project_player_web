@@ -15,25 +15,8 @@ export default function SelectDir(props: IProps) {
 
   const handleSelectDirectory = async () => {
     console.log('handleSelectDirectory')
-    if (!currentpath) {
-      // 显示路径输入对话框
-      setShowPathDialog(true);
-      return;
-    }
-
-    // 如果已经选择了路径，开始扫描
-    setIsScanning(true);
-    try {
-      const params = { path: currentpath };
-      console.log("currentpath", currentpath);
-      const res = (await getFiles(params)) as any;
-      console.log("dirs>>>", res);
-      setCategories(res);
-    } catch (error) {
-      console.error("扫描失败:", error);
-    } finally {
-      setIsScanning(false);
-    }
+    // 显示路径输入对话框
+    setShowPathDialog(true);
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,13 +42,27 @@ export default function SelectDir(props: IProps) {
     event.target.value = '';
   };
 
-  const handlePathConfirm = (path: string) => {
+  const handlePathConfirm = async (path: string) => {
     setCurrentpath(path);
+    
+    // 自动开始扫描
+    setIsScanning(true);
+    try {
+      const params = { path: path };
+      console.log("currentpath", path);
+      const res = (await getFiles(params)) as any;
+      console.log("dirs>>>", res);
+      setCategories(res);
+    } catch (error) {
+      console.error("扫描失败:", error);
+    } finally {
+      setIsScanning(false);
+    }
   };
 
-  const buttonText = !currentpath ? "选择路径" : (isScanning ? "扫描中..." : "开始扫描");
-  const buttonColor = !currentpath ? "#10b981" : "#3b82f6"; // 绿色表示选择，蓝色表示扫描
-  const hoverColor = !currentpath ? "#059669" : "#2563eb";
+  const buttonText = isScanning ? "扫描中..." : "选择路径";
+  const buttonColor = isScanning ? "#6b7280" : "#10b981"; // 灰色表示扫描中，绿色表示选择
+  const hoverColor = isScanning ? "#6b7280" : "#059669";
 
   return (
     <>
