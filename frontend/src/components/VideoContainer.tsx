@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useResources } from "../provider/resource-context";
-import { Button } from "antd";
+import ShimmerButton from "./ui/shimmer-button";
 
 export default function VideoContainer() {
   const {
@@ -30,7 +30,7 @@ export default function VideoContainer() {
 
   return (
     <div className="w-full h-full flex justify-between items-center flex-col">
-      <div className="video w-full h-[calc(100%_-_55px)] selectedG flex justify-center items-center">
+      <div className="video w-full h-[calc(100%_-_55px)] selectedG flex justify-center items-center rounded-lg overflow-hidden border border-white/10">
         <video
           muted={false}
           className="w-full h-full object-fit"
@@ -42,18 +42,33 @@ export default function VideoContainer() {
       </div>
       <div className="operation w-full h-[50px] flex justify-start items-center gap-x-[20px]">
         {palyerMode === "order" ? (
-          <Button type="primary" onClick={handlePlayMode}>
+          <ShimmerButton 
+            onClick={handlePlayMode}
+            className="px-6 py-2"
+            shimmerColor="#60a5fa"
+            background="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+          >
             顺序播放
-          </Button>
+          </ShimmerButton>
         ) : (
-          <Button type="primary" onClick={handlePlayMode}>
+          <ShimmerButton 
+            onClick={handlePlayMode}
+            className="px-6 py-2"
+            shimmerColor="#f472b6"
+            background="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+          >
             随机播放
-          </Button>
+          </ShimmerButton>
         )}
 
-        <Button type="primary" onClick={handleNext}>
+        <ShimmerButton 
+          onClick={handleNext}
+          className="px-6 py-2"
+          shimmerColor="#34d399"
+          background="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+        >
           下一首
-        </Button>
+        </ShimmerButton>
       </div>
     </div>
   );

@@ -1,11 +1,12 @@
 import {
-  FolderOutlined,
-  FilePdfOutlined,
-  FileWordOutlined,
-  FileImageOutlined,
-  VideoCameraOutlined,
-  FileUnknownOutlined,
-} from "@ant-design/icons";
+  HiFolder,
+  HiDocumentText,
+  HiPhotograph,
+  HiVideoCamera,
+  HiDocument,
+  HiMusicNote,
+  HiQuestionMarkCircle,
+} from "react-icons/hi";
 import cn from "classnames";
 import { useResources } from "../provider/resource-context";
 
@@ -15,14 +16,14 @@ interface IProps {
 type FileType = "directory" | "video" | "word" | "pdf" | "image" | "audio";
 const renderIcon = (type: FileType) => {
   const mapIcon = {
-    directory: <FolderOutlined />,
-    video: <VideoCameraOutlined />,
-    word: <FileWordOutlined />,
-    pdf: <FilePdfOutlined />,
-    image: <FileImageOutlined />,
-    audio: <FileImageOutlined />,
+    directory: <HiFolder className="text-yellow-400" />,
+    video: <HiVideoCamera className="text-blue-400" />,
+    word: <HiDocumentText className="text-blue-500" />,
+    pdf: <HiDocument className="text-red-400" />,
+    image: <HiPhotograph className="text-green-400" />,
+    audio: <HiMusicNote className="text-purple-400" />,
   };
-  return mapIcon[type] ? mapIcon[type] : <FileUnknownOutlined />;
+  return mapIcon[type] ? mapIcon[type] : <HiQuestionMarkCircle className="text-gray-400" />;
 };
 export default function FileItem(props: IProps) {
   const { currentFile, setCurrentFile, currentfileurl, setcurrentfileurl } =

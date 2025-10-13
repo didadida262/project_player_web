@@ -1,21 +1,21 @@
 import {
-  DatabaseOutlined,
-  ProfileOutlined,
-  HomeOutlined,
-  HistoryOutlined,
-} from "@ant-design/icons";
+  HiDatabase,
+  HiDocumentText,
+  HiHome,
+  HiClock,
+} from "react-icons/hi";
 
 export const MenuList = [
   {
     key: "/",
     label: "首页",
-    icon: <HomeOutlined />,
+    icon: <HiHome />,
   },
 
   {
     key: "/dispatch",
     label: "调度数据可视化展示",
-    icon: <DatabaseOutlined />,
+    icon: <HiDatabase />,
     children: [
       { key: "dispatch/static", label: "静态调度" },
       { key: "/dispatch/dynamic", label: "动态调度" },
@@ -26,7 +26,7 @@ export const MenuList = [
   {
     key: "/modeltrain",
     label: "模型训练",
-    icon: <ProfileOutlined />,
+    icon: <HiDocumentText />,
     children: [
       { key: "/traindata", label: "训练数据" },
       { key: "/traintasks", label: "训练任务" },
@@ -35,7 +35,7 @@ export const MenuList = [
   {
     key: "/history",
     label: "历史数据",
-    icon: <HistoryOutlined />,
+    icon: <HiClock />,
     children: [
       { key: "/nodecpu", label: "节点CPU" },
       { key: "/nodegpu", label: "节点GPU" },
