@@ -3,18 +3,21 @@ import api from "../api/index";
 import { IPCInfo } from "../utils/index";
 import { useResources } from "../provider/resource-context";
 import { getFiles } from "@/api/common";
+import { PathInputDialog } from "./ui/path-input-dialog";
 
 interface IProps {}
 
 export default function SelectDir(props: IProps) {
   const { currentpath, setCurrentpath, setCategories } = useResources();
   const [isScanning, setIsScanning] = useState(false);
+  const [showPathDialog, setShowPathDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelectDirectory = async () => {
+    console.log('handleSelectDirectory')
     if (!currentpath) {
-      // 如果没有选择路径，触发原生文件夹选择对话框
-      fileInputRef.current?.click();
+      // 显示路径输入对话框
+      setShowPathDialog(true);
       return;
     }
 
@@ -56,21 +59,23 @@ export default function SelectDir(props: IProps) {
     event.target.value = '';
   };
 
+  const handlePathConfirm = (path: string) => {
+    setCurrentpath(path);
+  };
+
   const buttonText = !currentpath ? "选择路径" : (isScanning ? "扫描中..." : "开始扫描");
   const buttonColor = !currentpath ? "#10b981" : "#3b82f6"; // 绿色表示选择，蓝色表示扫描
   const hoverColor = !currentpath ? "#059669" : "#2563eb";
 
   return (
     <>
-      {/* 隐藏的文件输入框 - 用于选择文件夹 */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        webkitdirectory=""
-        directory=""
-        multiple
-        style={{ display: 'none' }}
-        onChange={handleFileSelect}
+      {/* 路径输入对话框 */}
+      <PathInputDialog
+        isOpen={showPathDialog}
+        onClose={() => setShowPathDialog(false)}
+        onConfirm={handlePathConfirm}
+        title="选择文件夹路径"
+        placeholder="请输入文件夹路径..."
       />
       
       {/* 按钮 */}
