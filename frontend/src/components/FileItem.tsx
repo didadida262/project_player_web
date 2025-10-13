@@ -101,7 +101,7 @@ export default function FileItem(props: IProps) {
       {showTooltip && (
         <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-2 z-[9999]">
           <div className="bg-gray-800 text-white px-2 py-1 rounded-lg shadow-lg border border-gray-600">
-            <p className="text-xs whitespace-nowrap">
+            <p className="text-[11px] whitespace-nowrap">
               {file.name}
             </p>
             {/* 小三角箭头 - 指向左下角 */}
