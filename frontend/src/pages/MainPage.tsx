@@ -19,7 +19,7 @@ export default function MainPage(props: IProps) {
   const [isRightCollapsed, setIsRightCollapsed] = useState(true);
 
   return (
-    <div className="flex justify-between flex-col items-center w-full h-full pt-[8px] text-[white]">
+    <div className="flex justify-between flex-col items-center w-full h-full text-[white] px-[5px]">
       <div className="content w-full h-[calc(100%_-_16px)] px-0 py-[5px] flex items-stretch gap-0">
         {/* 左侧文件夹容器 */}
         <AnimatePresence>
