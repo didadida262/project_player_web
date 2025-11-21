@@ -192,7 +192,7 @@ export default function VideoContainer() {
       )}
       <div
         ref={containerRef}
-        className="video w-full flex-1 selectedG flex justify-center items-center rounded-lg overflow-hidden border border-white/10"
+        className="video w-full flex-1 selectedG flex justify-center items-center rounded-lg overflow-hidden "
       >
         <video
           ref={videoRef}
