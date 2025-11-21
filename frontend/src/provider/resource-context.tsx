@@ -30,7 +30,7 @@ interface ResourcesContextType {
   setCategories: (categories: any[]) => void;
   setSourcelist: (categories: any[]) => void;
   selectFile: (file: TFile) => void;
-  getNextVideo: () => void;
+  getNextVideo: () => TFile | null;
 }
 
 const ResourcesContext = createContext<ResourcesContextType | undefined>(

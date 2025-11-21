@@ -1,0 +1,39 @@
+{
+  "name": "project_player_desktop",
+  "private": true,
+  "version": "1.0.0",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail \"yarn --cwd frontend dev --host 127.0.0.1 --port 5173\" \"wait-on http://127.0.0.1:5173 && cross-env NODE_ENV=development ELECTRON_DEV_URL=http://127.0.0.1:5173 electron .\"",
+    "build": "yarn --cwd frontend build",
+    "dist": "yarn build && electron-builder --mac --publish never"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^26.3.1",
+    "electron-builder": "^26.0.0",
+    "wait-on": "^7.0.2"
+  },
+  "build": {
+    "appId": "com.projectplayer.app",
+    "productName": "Project Player",
+    "files": [
+      "electron/**/*",
+      "frontend/dist/**/*",
+      "backend/**/*",
+      "backend/node_modules/**/*",
+      "package.json",
+      "package-lock.json",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "dist_electron"
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.video"
+    }
+  }
+}
+

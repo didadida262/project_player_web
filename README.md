@@ -81,42 +81,42 @@ start.bat
 #### 1. 安装依赖
 
 ```bash
-# 安装后端依赖
-cd backend
-npm install
-# 或使用 yarn
-yarn install
-
-# 安装前端依赖
-cd ../frontend
-npm install
-# 或使用 yarn
-yarn install
+# 顺序安装后端、前端、再根目录的依赖
+cd project_player_web
+sh scripts/install-deps.sh
 ```
 
-#### 2. 启动后端服务
+#### 2. 启动服务
 
 ```bash
+# 后端（独立调试时）
 cd backend
-npm start
-# 或使用 yarn
 yarn start
-```
-
-后端服务默认运行在 http://localhost:3000
-
-#### 3. 启动前端项目
-
-在新的终端窗口中：
-
-```bash
-cd frontend
-npm run dev
-# 或使用 yarn
+#
+# 前端（独立调试时）
+cd ../frontend
 yarn dev
 ```
 
-前端项目默认运行在 http://localhost:5173
+后端服务默认运行在 http://localhost:3001，前端开发服务器在 http://localhost:5173
+
+## 桌面客户端（Electron）
+
+最新的桌面版本把前端 + 后端同时打包成了一个 macOS 应用，Electron 启动时会自动托管后端接口。
+
+### 开发
+
+1. 运行 `sh scripts/install-deps.sh`（脚本会依次去 `backend`、`frontend`、根目录安装依赖）。
+2. 执行 `yarn dev`，该命令会并行启动 Vite（前端）和 Electron（托管后端，总是监听 `3001`）。
+
+默认情况下前端请求 `http://127.0.0.1:3001`，也可以通过设置环境变量 `PLAYER_API_PORT` 或 `VITE_API_DEV`/`VITE_API_PROD` 来覆盖。
+
+### 打包发布（macOS）
+
+1. 运行 `yarn build`（确保已通过 `scripts/install-deps.sh` 预装依赖）。
+2. 运行 `yarn dist`，Electron Builder 会把前端、后端、依赖打包到 `dist_electron`，输出 `Project Player.dmg` / `Project Player.zip`。
+3. 双击 `.dmg` 或 `.zip` 中的 `.app` 即可安装/运行。
+
 
 ## 功能特性
 
@@ -148,8 +148,6 @@ yarn dev
 ### 前端构建
 ```bash
 cd frontend
-npm run build
-# 或使用 yarn
 yarn build
 ```
 
@@ -158,8 +156,6 @@ yarn build
 ### 预览生产版本
 ```bash
 cd frontend
-npm run preview
-# 或使用 yarn
 yarn preview
 ```
 

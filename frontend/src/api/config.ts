@@ -1,9 +1,11 @@
+const DEFAULT_API_BASE = "http://127.0.0.1:3001";
+
 export const getApiConfig = () => {
-  const isDev = import.meta.env.MODE === "development"; // 或者
+  const envBase =
+    import.meta.env.VITE_API_DEV || import.meta.env.VITE_API_PROD || DEFAULT_API_BASE;
+
   return {
-    baseURL: isDev
-      ? import.meta.env.VITE_API_DEV
-      : import.meta.env.VITE_API_PROD,
+    baseURL: envBase,
     timeout: 10000,
     headers: {
       "Content-Type": "application/json",
