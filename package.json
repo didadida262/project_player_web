@@ -17,7 +17,7 @@
   },
   "build": {
     "appId": "com.projectplayer.app",
-    "productName": "Project Player",
+    "productName": "Miles Player",
     "files": [
       "electron/**/*",
       "frontend/dist/**/*",
