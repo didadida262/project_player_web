@@ -71,7 +71,7 @@ export const PathInputDialog: React.FC<PathInputDialogProps> = ({
               <br />
               Windows: <code className="bg-gray-800 px-1 rounded text-[12px]">F:\RESP</code>
               <br />
-              Mac/Linux: <code className="bg-gray-800 px-1 rounded text-[12px]">/Users/YourName/Documents</code>
+              Mac/Linux: <code className="bg-gray-800 px-1 rounded text-[12px]">/Users/miles_wang/Desktop</code>
             </div>
 
             <div className="flex justify-end gap-3">

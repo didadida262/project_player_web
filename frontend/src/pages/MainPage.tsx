@@ -22,7 +22,7 @@ export default function MainPage(props: IProps) {
 
   return (
     <div className="flex justify-between flex-col items-center w-full h-full px-[8x] py-[8px] text-[white]">
-      <div className="operation w-full h-[40px] flex justify-between items-center gap-x-[10px] px-[5px] py-[5px]">
+      <div className="operation w-full h-[40px] flex justify-between items-center gap-x-[10px] px-[16px] py-[5px]">
         {/* 左侧：选择按钮 */}
         <SelectDir />
         

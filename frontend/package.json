@@ -7,8 +7,7 @@
     "dev": "vite",
     "start": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview",
-    "prepare": "husky install"
+    "preview": "vite preview"
   },
   "dependencies": {
     "classnames": "^2.5.1",
@@ -35,7 +34,6 @@
     "axios": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "eslint-plugin-simple-import-sort": "^10.0.0",
-    "husky": "^7.0.4",
     "i18next": "^23.12.2",
     "i18next-browser-languagedetector": "^8.0.0",
     "i18next-intervalplural-postprocessor": "^3.0.0",
