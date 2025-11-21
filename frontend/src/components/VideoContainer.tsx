@@ -122,12 +122,16 @@ export default function VideoContainer() {
     };
   }, [currentFile]); // 依赖currentFile，确保handleNext函数是最新的
 
+  const displayFileName = currentFile.name
+    ? currentFile.name.replace(/\.[^/.]+$/, "")
+    : "";
+
   return (
     <div className="w-full h-full flex flex-col">
       {/* 文件名显示区域 - 移到视频上方 */}
       {currentFile.name && (
         <div className="w-full px-4 py-2 bg-black/40 backdrop-blur-sm rounded-t-lg">
-          <p 
+            <p 
             className="text-white text-[14px]" 
             title={currentFile.name}
             style={{
@@ -136,8 +140,8 @@ export default function VideoContainer() {
               whiteSpace: 'nowrap',
               maxWidth: '100%'
             }}
-          >
-            {currentFile.name}
+            >
+              {displayFileName}
           </p>
         </div>
       )}
