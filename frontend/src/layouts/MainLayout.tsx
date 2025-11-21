@@ -1,8 +1,6 @@
 // src/layouts/MainLayout.jsx
 import { Outlet } from "react-router-dom";
 import HeaderComponent from "@/components/HeaderComponent";
-import MenuComponent from "@/components/Menu/MenuComponent";
-
 export default function MainLayout() {
   return (
     <div className="h-screen w-screen text-white">
