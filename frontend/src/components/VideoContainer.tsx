@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useResources } from "../provider/resource-context";
 import Hls from "hls.js";
 import { isVideoFile } from "../utils/mimeTypes";
@@ -15,6 +15,9 @@ export default function VideoContainer() {
   } = useResources();
   
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [videoRatio, setVideoRatio] = useState(16 / 9);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const hlsRef = useRef<Hls | null>(null);
 
   const handlePlayMode = () => {
@@ -126,6 +129,48 @@ export default function VideoContainer() {
     ? currentFile.name.replace(/\.[^/.]+$/, "")
     : "";
 
+  useEffect(() => {
+    if (!videoRef.current) return;
+    const handleLoadedMetadata = () => {
+      if (videoRef.current?.videoWidth && videoRef.current.videoHeight) {
+        setVideoRatio(videoRef.current.videoWidth / videoRef.current.videoHeight);
+      }
+    };
+
+    const videoEl = videoRef.current;
+    videoEl.addEventListener("loadedmetadata", handleLoadedMetadata);
+    return () => {
+      videoEl.removeEventListener("loadedmetadata", handleLoadedMetadata);
+    };
+  }, [currentFile]);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      setContainerSize({
+        width: entry.contentRect.width,
+        height: entry.contentRect.height,
+      });
+    });
+    resizeObserver.observe(containerRef.current);
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  const maxWidth = containerSize.width
+    ? Math.min(containerSize.width, containerSize.height * videoRatio)
+    : "100%";
+  const maxHeight = containerSize.height
+    ? Math.min(containerSize.height, containerSize.width / videoRatio)
+    : "100%";
+
+  const videoStyle: CSSProperties = {
+    width: typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth,
+    height: typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight,
+  };
+
   return (
     <div className="w-full h-full flex flex-col">
       {/* 文件名显示区域 - 移到视频上方 */}
@@ -145,13 +190,21 @@ export default function VideoContainer() {
           </p>
         </div>
       )}
-      <div className="video w-full flex-1 selectedG flex justify-center items-center rounded-lg overflow-hidden border border-white/10">
+      <div
+        ref={containerRef}
+        className="video w-full flex-1 selectedG flex justify-center items-center rounded-lg overflow-hidden border border-white/10"
+      >
         <video
           ref={videoRef}
           muted={false}
-          className="w-full h-full object-fit"
+          className="object-contain"
           autoPlay
           controls
+          style={{
+            ...videoStyle,
+            maxWidth: "100%",
+            maxHeight: "100%",
+          }}
           onEnded={handleNext} // 直接监听结束事件
         />
       </div>

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/utils/cn";
 
 interface PathInputDialogProps {
   isOpen: boolean;
@@ -69,9 +68,21 @@ export const PathInputDialog: React.FC<PathInputDialogProps> = ({
             <div className="text-[12px] text-gray-400 mb-4">
               示例路径：
               <br />
-              Windows: <code className="bg-gray-800 px-1 rounded text-[12px]">F:\RESP</code>
+              Windows:{" "}
+              <span
+                className="cursor-pointer text-cyan-300 hover:underline"
+                onClick={() => setPath("F:\\RESP")}
+              >
+                F:\RESP
+              </span>
               <br />
-              Mac/Linux: <code className="bg-gray-800 px-1 rounded text-[12px]">/Users/miles_wang/Desktop</code>
+              Mac/Linux:{" "}
+              <span
+                className="cursor-pointer text-cyan-300 hover:underline"
+                onClick={() => setPath("/Users/miles_wang/Desktop")}
+              >
+                /Users/miles_wang/Desktop
+              </span>
             </div>
 
             <div className="flex justify-end gap-3">

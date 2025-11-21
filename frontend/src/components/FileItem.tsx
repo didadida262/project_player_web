@@ -43,15 +43,15 @@ export default function FileItem(props: IProps) {
 
   return (
     <div
+      data-name={file.name}
       className={cn(
-        "w-[120px] h-[110px] flex flex-col justify-between items-center hover:cursor-pointer",
+        "w-full h-[110px] flex flex-col justify-between items-center hover:cursor-pointer",
         "hover:border-[#0acaff] hover:border-[3px]",
         currentFile.name === file.name
           ? "border-[#0acaff] border-[3px] border-solid"
           : "border-[1px] border-solid border-[#383b45]",
-        "mx-[8px]",
+        "px-3"
       )}
-      style={{ display: "inline-block" }}
       onClick={handleClick}
     >
       <div className="w-full h-[calc(100%_-_35px)] flex justify-center items-center text-[30px]">

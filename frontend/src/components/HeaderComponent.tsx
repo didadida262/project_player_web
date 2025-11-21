@@ -1,12 +1,15 @@
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { HiInformationCircle } from "react-icons/hi";
 import { useResources } from "../provider/resource-context";
 import SelectDir from "./SelectDir";
 
 export default function HeaderComponent() {
   const { currentpath } = useResources();
+  const [showInfo, setShowInfo] = useState(false);
 
   return (
-    <div className="relative w-full h-[80px] overflow-hidden">
+    <div className="relative w-full h-[80px] overflow-visible">
       <div className="absolute inset-0 bg-gray-800"></div>
 
       <div className="relative z-10 flex items-center px-common h-full">
@@ -46,12 +49,21 @@ export default function HeaderComponent() {
           />
         </div>
 
-        <div className="ml-auto flex items-center gap-x-3">
+        <div className="ml-auto flex items-center gap-x-3 relative">
           <SelectDir />
-          <div className="flex items-center gap-x-2 text-white text-[16px] font-mono bg-gradient-to-r from-cyan-500/20 to-blue-500/10 px-3 py-1 shadow-[inset_0_0_12px_rgba(0,0,0,0.4)]">
-            <span className="text-cyan-400">当前路径：</span>
-            <span className="truncate max-w-[280px]">{currentpath || "未选择路径"}</span>
-          </div>
+          <button
+            onClick={() => setShowInfo((prev) => !prev)}
+            className="flex items-center justify-center w-8 h-8 text-white hover:text-cyan-200 transition-colors focus:outline-none"
+            aria-label="切换路径提示"
+          >
+            <HiInformationCircle className="w-6 h-6" />
+          </button>
+          {showInfo && (
+            <div className="absolute bottom-[-70px] right-0 w-[320px] bg-black/80 border border-white/20 rounded shadow-xl p-3 text-[14px] text-white font-mono">
+              <div className="text-cyan-400 mb-1">当前路径</div>
+              <div className="truncate">{currentpath || "未选择路径"}</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
