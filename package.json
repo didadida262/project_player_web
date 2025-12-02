@@ -2,12 +2,17 @@
   "name": "project_player_desktop",
   "private": true,
   "version": "1.0.0",
+  "description": "A multi-modal streaming player for local resources",
+  "author": "Miles Player Team",
   "main": "electron/main.js",
   "scripts": {
     "dev": "concurrently --kill-others-on-fail \"yarn --cwd frontend dev --host 127.0.0.1 --port 5173\" \"wait-on http://127.0.0.1:5173 && cross-env NODE_ENV=development ELECTRON_DEV_URL=http://127.0.0.1:5173 electron .\"",
     "build": "yarn --cwd frontend build",
-    "dist": "yarn build && electron-builder --mac --publish never",
-    "dist:win": "yarn build && electron-builder --win --publish never"
+    "dist": "yarn build && electron-builder --win dir --publish never",
+    "dist:win": "yarn build && electron-builder --win dir --publish never",
+    "dist:win:nsis": "yarn build && electron-builder --win nsis --publish never",
+    "dist:win:all": "yarn build && electron-builder --win --publish never",
+    "dist:mac": "yarn build && electron-builder --mac --publish never"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
@@ -37,7 +42,23 @@
       "category": "public.app-category.video"
     },
     "win": {
-      "target": ["nsis", "portable"]
+      "target": [
+        {
+          "target": "dir",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "${productName}-${version}-${arch}",
+      "forceCodeSigning": false,
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Miles Player",
+      "deleteAppDataOnUninstall": false
     }
   }
 }
