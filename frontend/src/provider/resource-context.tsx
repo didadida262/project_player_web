@@ -88,11 +88,9 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleStreamFile = (file: any) => {
-    console.log("请求文件>>>", file);
     setcurrentfileurl(`http://localhost:3001/video?path=${file.path}`);
   };
   const selectFile = (file: TFile) => {
-    console.log("selectFile>>>>", file);
     switch (file.type) {
       case "video/mp4":
       case "audio/mpeg":
@@ -104,10 +102,6 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
         break;
     }
   };
-  useEffect(() => {
-    console.log("currentpath>>>", currentpath);
-  }, [currentpath]);
-
   return (
     <ResourcesContext.Provider
       value={{

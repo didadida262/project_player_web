@@ -14,7 +14,6 @@ export default function SelectDir(props: IProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelectDirectory = async () => {
-    console.log('handleSelectDirectory')
     // 显示路径输入对话框
     setShowPathDialog(true);
   };
@@ -35,7 +34,6 @@ export default function SelectDir(props: IProps) {
         directoryPath = fullPath.substring(0, fullPath.lastIndexOf('\\'));
       }
       
-      console.log("选择的文件夹路径:", directoryPath);
       setCurrentpath(directoryPath);
     }
     // 清空input值，允许重复选择同一个文件夹
@@ -49,9 +47,7 @@ export default function SelectDir(props: IProps) {
     setIsScanning(true);
     try {
       const params = { path: path };
-      console.log("currentpath", path);
       const res = (await getFiles(params)) as any;
-      console.log("dirs>>>", res);
       setCategories(res);
     } catch (error) {
       console.error("扫描失败:", error);

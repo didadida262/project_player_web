@@ -11,9 +11,7 @@ export default function PdfContainer() {
   const { currentfileurl, currentFile } = useResources()
   const [numPages, setNumPages] = useState<number | null>(null)
 
-  useEffect(() => {
-    console.log('pdf_modules>>>', currentfileurl)
-  }, [currentfileurl])
+  useEffect(() => {}, [currentfileurl])
 
   return (
     <div className="w-full h-full flex flex-col justify-center items-center overflow-y-auto">

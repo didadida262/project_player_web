@@ -93,7 +93,6 @@ export const ThemeProvider = (props: PropsType) => {
   );
 
   useEffect(() => {
-    console.log({ currentTheme });
     if (currentTheme === ThemeMode.LIGHT_MODE) {
       lightModeStyles.forEach((item) =>
         document.documentElement.style.setProperty(item.key, item.value),

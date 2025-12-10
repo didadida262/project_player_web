@@ -57,7 +57,6 @@ export default function VideoContainer() {
         hlsRef.current = hls;
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          console.log('HLS manifest parsed, starting playback');
           video.play().catch(console.error);
         });
 
@@ -66,15 +65,12 @@ export default function VideoContainer() {
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                console.log('Fatal network error, trying to recover...');
                 hls.startLoad();
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                console.log('Fatal media error, trying to recover...');
                 hls.recoverMediaError();
                 break;
               default:
-                console.log('Fatal error, destroying HLS...');
                 hls.destroy();
                 break;
             }

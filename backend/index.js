@@ -126,24 +126,11 @@ const createExpressApp = (options = {}) => {
     const scanPath = req.query.path || basePath;
     const keyword = req.query.keyword || "";
 
-    console.log("[getFiles] path:", scanPath, "raw keyword:", keyword);
-
     const files = await readDirectory(scanPath);
     const normalizedKeyword = normalizeKeyword(keyword);
-    console.log("[getFiles] normalized keyword:", normalizedKeyword);
-    console.log("[getFiles] total files:", files.length);
-
     const filteredFiles = files.filter((file) =>
       matchByKeyword(file.name, normalizedKeyword),
     );
-
-    console.log("[getFiles] matched files:", filteredFiles.length);
-    if (filteredFiles.length > 0) {
-      console.log(
-        "[getFiles] sample:",
-        filteredFiles.slice(0, 5).map((f) => f.name),
-      );
-    }
 
     res.json(filteredFiles);
   });
@@ -158,7 +145,6 @@ const createExpressApp = (options = {}) => {
     const fileSize = stat.size;
     const range = req.headers.range;
     const contentType = getMimeTypeFromExtension(videoPath);
-    console.log("contentType>>", contentType);
 
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");

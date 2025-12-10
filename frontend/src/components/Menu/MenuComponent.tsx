@@ -26,7 +26,6 @@ export default function MenuComponent() {
   };
 
   const onClick = (key: string) => {
-    console.log("navigate to>>>", key);
     navigate(key);
   };
 

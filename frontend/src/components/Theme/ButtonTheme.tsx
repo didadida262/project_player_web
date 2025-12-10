@@ -7,7 +7,6 @@ import { ThemeContext, ThemeMode } from "@/components/Theme/themeProvider";
 
 const ButtonTheme = ({ className }: any) => {
   const { currentTheme, setCurrentTheme } = useContext(ThemeContext);
-  console.log("currentTheme>>>", currentTheme);
   return (
     <div className={cn("h-[60px] px-2 py-2", className)}>
       <ButtonCommon
