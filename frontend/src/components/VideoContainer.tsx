@@ -175,6 +175,13 @@ export default function VideoContainer() {
         return;
       }
 
+      // 切换模式：M/m
+      if (event.key === "m" || event.key === "M") {
+        event.preventDefault();
+        handlePlayMode();
+        return;
+      }
+
       // 下一首：PageDown / ArrowDown
       if (event.key === "PageDown" || event.key === "ArrowDown") {
         event.preventDefault(); // 阻止默认行为
@@ -194,7 +201,7 @@ export default function VideoContainer() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentFile]); // 依赖currentFile，确保handleNext函数是最新的
+  }, [currentFile, palyerMode, sourcelist, prevStack]); // 依赖最新状态，确保快捷键读取最新逻辑
 
   const displayFileName = currentFile.name
     ? currentFile.name.replace(/\.[^/.]+$/, "")
