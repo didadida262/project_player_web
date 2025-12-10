@@ -253,9 +253,9 @@ export default function VideoContainer() {
     <div className="w-full h-full flex flex-col">
       {/* 文件名显示区域 - 移到视频上方 */}
       {currentFile.name && (
-        <div className="w-full px-4 py-2 bg-gradient-to-r from-purple-600/40 via-cyan-500/30 to-blue-500/30 backdrop-blur-sm rounded-t-lg border border-white/10 shadow-[0_0_18px_rgba(79,70,229,0.35)]">
+        <div className="w-full px-4 py-2">
           <p
-            className="text-[16px] font-semibold bg-gradient-to-r from-cyan-200 via-white to-purple-200 bg-clip-text text-transparent drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]"
+            className="text-[16px] font-semibold bg-gradient-to-r from-cyan-300 via-white to-purple-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(56,189,248,0.7)]"
             title={currentFile.name}
             style={{
               overflow: "hidden",
@@ -276,7 +276,8 @@ export default function VideoContainer() {
         <video
           ref={videoRef}
           muted={false}
-          className="object-contain"
+          tabIndex={-1}
+          className="object-contain outline-none focus:outline-none focus:ring-0 focus:border-0"
           autoPlay
           controls
           style={{
