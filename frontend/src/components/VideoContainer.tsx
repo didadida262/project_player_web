@@ -18,6 +18,9 @@ export default function VideoContainer() {
     selectFile,
     setCurrentFile,
     getNextVideo,
+    sourcelist,
+    prevStack,
+    setPrevStack,
   } = useResources();
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -44,9 +47,34 @@ export default function VideoContainer() {
       }
       return;
     }
+    if (currentFile?.name) {
+      setPrevStack([...(prevStack || []), currentFile]);
+    }
     const nextFile = getNextVideo();
     if (nextFile) {
       setCurrentFile(nextFile);
+    }
+  };
+  const handlePrev = () => {
+    if (!prevStack || prevStack.length === 0) {
+      if (sourcelist.length === 0) return;
+      // 回退栈为空时，顺序回退一首（降级行为）
+      const currentIndex = sourcelist.findIndex(
+        (item: any) => item.name === currentFile.name,
+      );
+      let prevIndex = currentIndex - 1;
+      if (prevIndex < 0) prevIndex = sourcelist.length - 1;
+      const prevFile = sourcelist[prevIndex];
+      if (prevFile) {
+        setCurrentFile(prevFile);
+      }
+      return;
+    }
+    const cloned = [...prevStack];
+    const prevFile = cloned.pop();
+    setPrevStack(cloned);
+    if (prevFile) {
+      setCurrentFile(prevFile);
     }
   };
 
@@ -147,10 +175,15 @@ export default function VideoContainer() {
         return;
       }
 
-      // 按下方向键下时，切换到下一首
-      if (event.key === 'ArrowDown') {
+      // PageDown：下一首
+      if (event.key === 'PageDown') {
         event.preventDefault(); // 阻止默认行为
         handleNext();
+      }
+      // PageUp：上一首
+      if (event.key === 'PageUp') {
+        event.preventDefault();
+        handlePrev();
       }
     };
 

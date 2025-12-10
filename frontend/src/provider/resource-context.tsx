@@ -18,6 +18,7 @@ interface ResourcesContextType {
   currentpath: string;
   categories: any[];
   sourcelist: any[];
+  prevStack: TFile[];
   currentCate: any;
   currentFile: any;
   currentfileurl: any;
@@ -29,6 +30,7 @@ interface ResourcesContextType {
   setCurrentpath: (path: string) => void;
   setCategories: (categories: any[]) => void;
   setSourcelist: (categories: any[]) => void;
+  setPrevStack: (stack: TFile[]) => void;
   selectFile: (file: TFile) => void;
   getNextVideo: () => TFile | null;
 }
@@ -45,6 +47,7 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
   const [palyerMode, setPalyerMode] = useState<string>("order"); // order | random | single
   const [categories, setCategories] = useState<any[]>([]);
   const [sourcelist, setSourcelist] = useState<any[]>([]);
+  const [prevStack, setPrevStack] = useState<TFile[]>([]);
 
   const getNextVideo = () => {
     //   播放结束，根据当前播放模式，选择下一个
@@ -118,6 +121,8 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
         setCurrentpath,
         setSourcelist,
         setCategories,
+        prevStack,
+        setPrevStack,
         setCurrentCate,
         setCurrentFile,
         setcurrentfileurl,
