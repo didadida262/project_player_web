@@ -42,7 +42,7 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
   const [currentCate, setCurrentCate] = useState<any>({});
   const [currentFile, setCurrentFile] = useState<any>({});
   const [currentfileurl, setcurrentfileurl] = useState<any>();
-  const [palyerMode, setPalyerMode] = useState<string>("order");
+  const [palyerMode, setPalyerMode] = useState<string>("order"); // order | random | single
   const [categories, setCategories] = useState<any[]>([]);
   const [sourcelist, setSourcelist] = useState<any[]>([]);
 
@@ -57,7 +57,9 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
     );
     let nextFileIndex;
     
-    if (palyerMode === "order") {
+    if (palyerMode === "single") {
+      nextFileIndex = currentIndex !== -1 ? currentIndex : 0;
+    } else if (palyerMode === "order") {
       nextFileIndex = currentIndex + 1;
       if (nextFileIndex >= sourcelist.length) {
         nextFileIndex = 0;

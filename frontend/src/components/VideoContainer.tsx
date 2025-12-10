@@ -2,6 +2,11 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useResources } from "../provider/resource-context";
 import Hls from "hls.js";
 import { isVideoFile } from "../utils/mimeTypes";
+import {
+  HiOutlineSwitchHorizontal,
+  HiOutlineSparkles,
+  HiOutlineRefresh,
+} from "react-icons/hi";
 
 export default function VideoContainer() {
   const {
@@ -21,9 +26,23 @@ export default function VideoContainer() {
   const hlsRef = useRef<Hls | null>(null);
 
   const handlePlayMode = () => {
-    setPalyerMode(palyerMode === "order" ? "random" : "order");
+    const next =
+      palyerMode === "order"
+        ? "random"
+        : palyerMode === "random"
+        ? "single"
+        : "order";
+    setPalyerMode(next);
   };
   const handleNext = () => {
+    if (palyerMode === "single") {
+      // 单曲循环：直接重播当前视频
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+        videoRef.current.play().catch(console.error);
+      }
+      return;
+    }
     const nextFile = getNextVideo();
     if (nextFile) {
       setCurrentFile(nextFile);
@@ -205,41 +224,43 @@ export default function VideoContainer() {
         />
       </div>
       <div className="operation w-full h-[50px] flex justify-start items-center gap-x-[10px]">
-        {palyerMode === "order" ? (
-          <button 
-            onClick={handlePlayMode}
-            className="px-4 py-2 text-[18px] h-8 rounded-none text-white hover:opacity-90 transition-all flex items-center justify-center"
-            style={{ 
-              backgroundColor: "#3b82f6", // 蓝色
-              '--hover-color': "#2563eb"
-            } as React.CSSProperties}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#2563eb";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#3b82f6";
-            }}
-          >
-            顺序播放
-          </button>
-        ) : (
-          <button 
-            onClick={handlePlayMode}
-            className="px-4 py-2 text-[18px] h-8 rounded-none text-white hover:opacity-90 transition-all flex items-center justify-center"
-            style={{ 
-              backgroundColor: "#f59e0b", // 橙色
-              '--hover-color': "#d97706"
-            } as React.CSSProperties}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#d97706";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#f59e0b";
-            }}
-          >
-            随机播放
-          </button>
-        )}
+        <button
+          onClick={handlePlayMode}
+          className="px-4 py-2 text-[15px] h-9 rounded text-white hover:opacity-90 transition-all flex items-center gap-2 justify-center"
+          style={{
+            backgroundColor:
+              palyerMode === "order"
+                ? "#3b82f6" // 蓝
+                : palyerMode === "random"
+                ? "#f59e0b" // 橙
+                : "#8b5cf6", // 紫 单曲循环
+            "--hover-color":
+              palyerMode === "order"
+                ? "#2563eb"
+                : palyerMode === "random"
+                ? "#d97706"
+                : "#7c3aed",
+          } as React.CSSProperties}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor =
+              (e.currentTarget.style as any)["--hover-color"] || "#2563eb";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor =
+              palyerMode === "order"
+                ? "#3b82f6"
+                : palyerMode === "random"
+                ? "#f59e0b"
+                : "#8b5cf6";
+          }}
+        >
+          {palyerMode === "order" && <HiOutlineSwitchHorizontal size={18} />}
+          {palyerMode === "random" && <HiOutlineSparkles size={18} />}
+          {palyerMode === "single" && <HiOutlineRefresh size={18} />}
+          {palyerMode === "order" && "顺序播放"}
+          {palyerMode === "random" && "随机播放"}
+          {palyerMode === "single" && "单曲循环"}
+        </button>
 
         <button 
           onClick={handleNext}
