@@ -125,6 +125,28 @@ export default function VideoContainer() {
   // 添加键盘快捷键监听
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // 避免在输入框等控件里触发快捷键
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const isFormInput =
+        tag === "input" ||
+        tag === "textarea" ||
+        target?.getAttribute("contenteditable") === "true";
+      if (isFormInput) return;
+
+      // 空格：播放/暂停
+      if (event.code === "Space" || event.key === " ") {
+        event.preventDefault();
+        const video = videoRef.current;
+        if (!video) return;
+        if (video.paused) {
+          video.play().catch(console.error);
+        } else {
+          video.pause();
+        }
+        return;
+      }
+
       // 按下方向键下时，切换到下一首
       if (event.key === 'ArrowDown') {
         event.preventDefault(); // 阻止默认行为
