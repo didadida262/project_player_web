@@ -93,7 +93,13 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleStreamFile = (file: any) => {
-    setcurrentfileurl(`http://localhost:3001/video?path=${file.path}`);
+    const encodedPath = encodeURIComponent(file.path || "");
+    // 使用与前端 API 相同的基址（VITE_API_DEV/PROD 或默认 127.0.0.1:3001）
+    const apiBase =
+      import.meta.env.VITE_API_DEV ||
+      import.meta.env.VITE_API_PROD ||
+      "http://127.0.0.1:3001";
+    setcurrentfileurl(`${apiBase}/video?path=${encodedPath}`);
   };
   const selectFile = (file: TFile) => {
     switch (file.type) {
