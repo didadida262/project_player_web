@@ -6,6 +6,7 @@ import {
   HiOutlineSwitchHorizontal,
   HiOutlineSparkles,
   HiOutlineRefresh,
+  HiOutlinePlay,
 } from "react-icons/hi";
 
 export default function VideoContainer() {
@@ -262,12 +263,12 @@ export default function VideoContainer() {
           {palyerMode === "single" && "单曲循环"}
         </button>
 
-        <button 
+        <button
           onClick={handleNext}
-          className="px-4 py-2 text-[18px] h-8 rounded-none text-white hover:opacity-90 transition-all flex items-center justify-center"
-          style={{ 
+          className="px-4 py-2 text-[15px] h-9 rounded text-white hover:opacity-90 transition-all flex items-center gap-2 justify-center"
+          style={{
             backgroundColor: "#10b981", // 绿色
-            '--hover-color': "#059669"
+            "--hover-color": "#059669",
           } as React.CSSProperties}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = "#059669";
@@ -276,6 +277,7 @@ export default function VideoContainer() {
             e.currentTarget.style.backgroundColor = "#10b981";
           }}
         >
+          <HiOutlinePlay size={18} />
           下一个
         </button>
       </div>
