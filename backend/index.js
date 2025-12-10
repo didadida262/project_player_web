@@ -81,6 +81,16 @@ const createExpressApp = (options = {}) => {
   const basePath = options.defaultPath || DEFAULT_SCAN_PATH;
 
   const app = express();
+  // 禁用 ETag，避免前端缓存造成 304 返回旧数据
+  app.set("etag", false);
+  // 强制禁用缓存
+  app.use((req, res, next) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("Surrogate-Control", "no-store");
+    next();
+  });
 
   app.use(
     cors({
@@ -98,10 +108,44 @@ const createExpressApp = (options = {}) => {
     });
   });
 
+  const normalizeKeyword = (keyword = "") =>
+    keyword
+      .toString()
+      .trim()
+      .toLowerCase();
+
+  const matchByKeyword = (name = "", keyword = "") => {
+    const normalizedName = normalizeKeyword(name);
+    const normalizedKeyword = normalizeKeyword(keyword);
+    // 关键词为空，视为不过滤（由调用方控制）
+    if (!normalizedKeyword) return true;
+    return normalizedName.includes(normalizedKeyword);
+  };
+
   app.get("/getFiles", async (req, res) => {
     const scanPath = req.query.path || basePath;
+    const keyword = req.query.keyword || "";
+
+    console.log("[getFiles] path:", scanPath, "raw keyword:", keyword);
+
     const files = await readDirectory(scanPath);
-    res.json(files);
+    const normalizedKeyword = normalizeKeyword(keyword);
+    console.log("[getFiles] normalized keyword:", normalizedKeyword);
+    console.log("[getFiles] total files:", files.length);
+
+    const filteredFiles = files.filter((file) =>
+      matchByKeyword(file.name, normalizedKeyword),
+    );
+
+    console.log("[getFiles] matched files:", filteredFiles.length);
+    if (filteredFiles.length > 0) {
+      console.log(
+        "[getFiles] sample:",
+        filteredFiles.slice(0, 5).map((f) => f.name),
+      );
+    }
+
+    res.json(filteredFiles);
   });
 
   app.get("/video", (req, res) => {
