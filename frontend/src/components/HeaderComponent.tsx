@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HiInformationCircle } from "react-icons/hi";
 import { useResources } from "../provider/resource-context";
 import SelectDir from "./SelectDir";
@@ -7,6 +7,21 @@ import SelectDir from "./SelectDir";
 export default function HeaderComponent() {
   const { currentpath } = useResources();
   const [showInfo, setShowInfo] = useState(false);
+  const infoRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (infoRef.current && !infoRef.current.contains(event.target as Node)) {
+        setShowInfo(false);
+      }
+    };
+    if (showInfo) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showInfo]);
 
   return (
     <div className="relative w-full h-[80px] overflow-visible">
@@ -59,9 +74,25 @@ export default function HeaderComponent() {
             <HiInformationCircle className="w-6 h-6" />
           </button>
           {showInfo && (
-            <div className="absolute bottom-[-70px] right-0 w-[320px] bg-black/80 border border-white/20 rounded shadow-xl p-3 text-[14px] text-white font-mono">
-              <div className="text-cyan-400 mb-1">当前路径</div>
-              <div className="truncate">{currentpath || "未选择路径"}</div>
+            <div
+              ref={infoRef}
+              className="absolute bottom-[-140px] right-0 w-[360px] bg-black/85 border border-white/20 rounded shadow-xl p-3 text-[13px] text-white font-mono backdrop-blur-md space-y-2"
+            >
+              <div>
+                <div className="text-cyan-400 mb-1">当前路径</div>
+                <div className="truncate text-gray-200">
+                  {currentpath || "未选择路径"}
+                </div>
+              </div>
+              <div>
+                <div className="text-cyan-400 mb-1">快捷键</div>
+                <ul className="space-y-1 text-gray-200">
+                  <li>空格：播放 / 暂停</li>
+                  <li>PageDown / ↓ ：下一首</li>
+                  <li>PageUp / ↑ ：上一首</li>
+                  <li>M ：切换播放模式</li>
+                </ul>
+              </div>
             </div>
           )}
         </div>

@@ -253,18 +253,19 @@ export default function VideoContainer() {
     <div className="w-full h-full flex flex-col">
       {/* 文件名显示区域 - 移到视频上方 */}
       {currentFile.name && (
-        <div className="w-full px-4 py-2 bg-black/40 backdrop-blur-sm rounded-t-lg">
-            <p 
-            className="text-white text-[14px]" 
+        <div className="w-full px-4 py-2 bg-gradient-to-r from-purple-600/40 via-cyan-500/30 to-blue-500/30 backdrop-blur-sm rounded-t-lg border border-white/10 shadow-[0_0_18px_rgba(79,70,229,0.35)]">
+          <p
+            className="text-[16px] font-semibold bg-gradient-to-r from-cyan-200 via-white to-purple-200 bg-clip-text text-transparent drop-shadow-[0_0_6px_rgba(59,130,246,0.6)]"
             title={currentFile.name}
             style={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              maxWidth: '100%'
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              maxWidth: "100%",
+              letterSpacing: "0.5px",
             }}
-            >
-              {displayFileName}
+          >
+            {displayFileName}
           </p>
         </div>
       )}
