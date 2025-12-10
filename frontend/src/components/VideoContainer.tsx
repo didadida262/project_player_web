@@ -175,13 +175,13 @@ export default function VideoContainer() {
         return;
       }
 
-      // PageDown：下一首
-      if (event.key === 'PageDown') {
+      // 下一首：PageDown / ArrowDown
+      if (event.key === "PageDown" || event.key === "ArrowDown") {
         event.preventDefault(); // 阻止默认行为
         handleNext();
       }
-      // PageUp：上一首
-      if (event.key === 'PageUp') {
+      // 上一首：PageUp / ArrowUp
+      if (event.key === "PageUp" || event.key === "ArrowUp") {
         event.preventDefault();
         handlePrev();
       }
