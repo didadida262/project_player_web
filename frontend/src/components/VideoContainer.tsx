@@ -165,6 +165,7 @@ export default function VideoContainer() {
       // 空格：播放/暂停
       if (event.code === "Space" || event.key === " ") {
         event.preventDefault();
+        event.stopPropagation(); // 阻止事件冒泡，防止视频元素的原生行为
         const video = videoRef.current;
         if (!video) return;
         if (video.paused) {
@@ -194,12 +195,12 @@ export default function VideoContainer() {
       }
     };
 
-    // 添加键盘事件监听器
-    document.addEventListener('keydown', handleKeyDown);
+    // 添加键盘事件监听器，使用 capture 阶段捕获事件，确保在视频元素处理之前拦截
+    document.addEventListener('keydown', handleKeyDown, true);
 
     // 清理函数：组件卸载时移除事件监听器
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown, true);
     };
   }, [currentFile, palyerMode, sourcelist, prevStack]); // 依赖最新状态，确保快捷键读取最新逻辑
 
@@ -286,6 +287,13 @@ export default function VideoContainer() {
             maxHeight: "100%",
           }}
           onEnded={handleNext} // 直接监听结束事件
+          onKeyDown={(e) => {
+            // 阻止视频元素的原生空格键行为
+            if (e.code === "Space" || e.key === " ") {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
         />
       </div>
       <div className="operation w-full h-[50px] flex justify-start items-center gap-x-[10px]">
