@@ -23,11 +23,15 @@ const startBackend = () => {
 };
 
 const createMainWindow = async () => {
+  // 设置最小尺寸
+  const minWidth = 1280;
+  const minHeight = 900;
+  
   const win = new BrowserWindow({
-    width: 1280,
-    height: 780,
-    minWidth: 1000,
-    minHeight: 660,
+    width: minWidth,      // 初始宽度设为最小宽度
+    height: minHeight,    // 初始高度设为最小高度
+    minWidth: minWidth,   // 最小宽度，禁止拖拽变小
+    minHeight: minHeight, // 最小高度，禁止拖拽变小
     autoHideMenuBar: true,
     webPreferences: {
       contextIsolation: true,
