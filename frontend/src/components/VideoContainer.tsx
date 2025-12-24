@@ -213,6 +213,17 @@ export default function VideoContainer() {
     const handleLoadedMetadata = () => {
       if (videoRef.current?.videoWidth && videoRef.current.videoHeight) {
         setVideoRatio(videoRef.current.videoWidth / videoRef.current.videoHeight);
+        // 视频元数据加载后，强制更新一次容器尺寸，确保计算正确
+        if (containerRef.current) {
+          requestAnimationFrame(() => {
+            if (containerRef.current) {
+              setContainerSize({
+                width: containerRef.current.clientWidth,
+                height: containerRef.current.clientHeight,
+              });
+            }
+          });
+        }
       }
     };
 
@@ -225,6 +236,26 @@ export default function VideoContainer() {
 
   useEffect(() => {
     if (!containerRef.current) return;
+    
+    const updateContainerSize = () => {
+      if (containerRef.current) {
+        // 直接获取尺寸，不使用 requestAnimationFrame，确保立即更新
+        const width = containerRef.current.clientWidth;
+        const height = containerRef.current.clientHeight;
+        // 只有当尺寸有效时才更新，避免设置为 0
+        if (width > 0 && height > 0) {
+          setContainerSize({ width, height });
+        }
+      }
+    };
+    
+    // 立即获取初始尺寸，使用双重 requestAnimationFrame 确保在布局完成后获取
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        updateContainerSize();
+      });
+    });
+    
     const resizeObserver = new ResizeObserver((entries) => {
       const entry = entries[0];
       setContainerSize({
@@ -233,22 +264,65 @@ export default function VideoContainer() {
       });
     });
     resizeObserver.observe(containerRef.current);
+    
+    // 监听窗口大小变化，确保最大化/最小化/拖拽时都能触发
+    // 使用 requestAnimationFrame 确保在布局完成后获取准确尺寸
+    let rafId: number | null = null;
+    const handleWindowResize = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        rafId = requestAnimationFrame(() => {
+          updateContainerSize();
+          rafId = null;
+        });
+      });
+    };
+    
+    window.addEventListener('resize', handleWindowResize);
+    
     return () => {
       resizeObserver.disconnect();
+      window.removeEventListener('resize', handleWindowResize);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
 
-  const maxWidth = containerSize.width
-    ? Math.min(containerSize.width, containerSize.height * videoRatio)
-    : "100%";
-  const maxHeight = containerSize.height
-    ? Math.min(containerSize.height, containerSize.width / videoRatio)
-    : "100%";
-
-  const videoStyle: CSSProperties = {
-    width: typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth,
-    height: typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight,
+  // 根据容器尺寸和视频宽高比计算最佳显示尺寸，尽可能填满容器
+  const calculateVideoSize = () => {
+    // 如果容器尺寸还没有正确初始化，使用 maxWidth/maxHeight 限制，而不是固定尺寸
+    // 这样可以避免在初始化时使用错误的尺寸导致溢出
+    if (!containerSize.width || !containerSize.height || !videoRatio) {
+      return { 
+        maxWidth: "100%", 
+        maxHeight: "100%",
+        width: "auto",
+        height: "auto",
+      };
+    }
+    
+    const containerAspectRatio = containerSize.width / containerSize.height;
+    
+    let width: number;
+    let height: number;
+    
+    // 如果容器比视频更宽（容器宽高比 > 视频宽高比），高度填满，宽度按比例
+    if (containerAspectRatio > videoRatio) {
+      height = containerSize.height;
+      width = height * videoRatio;
+    } else {
+      // 如果容器比视频更高（容器宽高比 <= 视频宽高比），宽度填满，高度按比例
+      width = containerSize.width;
+      height = width / videoRatio;
+    }
+    
+    // 确保不超过容器尺寸（双重保险）
+    width = Math.min(width, containerSize.width);
+    height = Math.min(height, containerSize.height);
+    
+    return { width: `${width}px`, height: `${height}px` };
   };
+
+  const videoStyle: CSSProperties = calculateVideoSize();
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -281,11 +355,7 @@ export default function VideoContainer() {
           className="object-contain outline-none focus:outline-none focus:ring-0 focus:border-0"
           autoPlay
           controls
-          style={{
-            ...videoStyle,
-            maxWidth: "100%",
-            maxHeight: "100%",
-          }}
+          style={videoStyle}
           onEnded={handleNext} // 直接监听结束事件
           onKeyDown={(e) => {
             // 阻止视频元素的原生空格键行为
