@@ -162,6 +162,13 @@ export default function VideoContainer() {
         target?.getAttribute("contenteditable") === "true";
       if (isFormInput) return;
 
+      // 如果事件目标是 video 元素，且是左右方向键，允许视频的原生行为（前进/后退）
+      const isVideoElement = tag === "video";
+      if (isVideoElement && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+        // 不阻止事件，让视频元素处理左右键（前进/后退）
+        return;
+      }
+
       // 空格：播放/暂停
       if (event.code === "Space" || event.key === " ") {
         event.preventDefault();
