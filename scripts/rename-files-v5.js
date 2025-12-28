@@ -1,25 +1,27 @@
 #!/usr/bin/env node
 
 /**
- * 文件重命名脚本 V2
- * 功能：扫描指定文件夹，将文件名从格式 "曾经的QQ音乐三巨头！这TM才叫音乐！无损音质 99首合集 (P18. 18. 文件名称).mp4"
+ * 文件重命名脚本 V5
+ * 功能：扫描指定文件夹，将文件名从格式 "20年前我们在听什么？90年代 那些我们曾经听过的歌 回忆杀 每一首皆是满满的回忆 (P4. 004.文件名称).mp4"
  *       重命名为 "文件名称.mp4"
  * 
  * 使用方法：
- *   node scripts/rename-files-v2.js <文件夹路径>
+ *   node scripts/rename-files-v5.js <文件夹路径>
  * 
  * 例如：
- *   node scripts/rename-files-v2.js "C:\Users\Username\Videos"
- *   node scripts/rename-files-v2.js "F:/RESP/cate_音乐"
+ *   node scripts/rename-files-v5.js "C:\Users\Username\Videos"
+ *   node scripts/rename-files-v5.js "F:/RESP/cate_90年代"
  */
 
 const fs = require('fs');
 const path = require('path');
 
 // 从文件名中提取实际文件名的正则表达式
-// 匹配格式：... (P数字. 数字. 文件名称).扩展名
-// 例如：曾经的QQ音乐三巨头！这TM才叫音乐！无损音质 99首合集 (P18. 18. 徐良&孙羽幽-情话).mp4
-const FILENAME_PATTERN = /\(P\d+\.\s*\d+\.\s*(.+?)\)(\.[^.]+)$/;
+// 匹配格式：... (P数字. 数字.文件名称).扩展名
+// 注意：数字和文件名之间可能有空格，也可能没有空格
+// 例如：20年前我们在听什么？90年代 那些我们曾经听过的歌 回忆杀 每一首皆是满满的回忆 (P4. 004.文件名称).mp4
+const FILENAME_PATTERN_WITH_BRACKET = /\(P\d+\.\s*\d+\.\s*(.+?)\)(\.[^.]+)$/;  // 有右括号，扩展名在括号外
+const FILENAME_PATTERN_WITHOUT_BRACKET = /\(P\d+\.\s*\d+\.\s*(.+?)(\.[^.]+)$/;  // 没有右括号，扩展名在括号内
 
 /**
  * 提取文件名
@@ -27,12 +29,22 @@ const FILENAME_PATTERN = /\(P\d+\.\s*\d+\.\s*(.+?)\)(\.[^.]+)$/;
  * @returns {string|null} - 提取的文件名，如果不匹配则返回 null
  */
 function extractFilename(filename) {
-  const match = filename.match(FILENAME_PATTERN);
+  // 先尝试匹配有右括号的格式：... (P数字. 数字.文件名).扩展名
+  let match = filename.match(FILENAME_PATTERN_WITH_BRACKET);
   if (match) {
     const extractedName = match[1].trim(); // 提取的文件名部分
     const extension = match[2]; // 文件扩展名
     return extractedName + extension;
   }
+  
+  // 再尝试匹配没有右括号的格式：... (P数字. 数字.文件名.扩展名
+  match = filename.match(FILENAME_PATTERN_WITHOUT_BRACKET);
+  if (match) {
+    const extractedName = match[1].trim(); // 提取的文件名部分
+    const extension = match[2]; // 文件扩展名
+    return extractedName + extension;
+  }
+  
   return null;
 }
 
@@ -86,9 +98,9 @@ function scanAndRename(folderPath) {
     console.error(`错误: 文件夹不存在: ${folderPath}`);
     console.error('\n提示:');
     console.error('  1. 请检查路径是否正确');
-    console.error('  2. 在 PowerShell 中，建议使用引号包裹路径: node scripts/rename-files-v2.js "F:\\RESP\\cate_音乐"');
-    console.error('  3. 或者使用正斜杠: node scripts/rename-files-v2.js "F:/RESP/cate_音乐"');
-    console.error('  4. 或者使用单引号: node scripts/rename-files-v2.js \'F:\\RESP\\cate_音乐\'');
+    console.error('  2. 在 PowerShell 中，建议使用引号包裹路径: node scripts/rename-files-v5.js "F:\\RESP\\cate_90年代"');
+    console.error('  3. 或者使用正斜杠: node scripts/rename-files-v5.js "F:/RESP/cate_90年代"');
+    console.error('  4. 或者使用单引号: node scripts/rename-files-v5.js \'F:\\RESP\\cate_90年代\'');
     process.exit(1);
   }
 
@@ -159,14 +171,14 @@ function main() {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.log('使用方法: node scripts/rename-files-v2.js <文件夹路径>');
+    console.log('使用方法: node scripts/rename-files-v5.js <文件夹路径>');
     console.log('\n示例:');
-    console.log('  node scripts/rename-files-v2.js "C:\\Users\\Username\\Videos"');
-    console.log('  node scripts/rename-files-v2.js "F:/RESP/cate_音乐"');
-    console.log('  node scripts/rename-files-v2.js "./videos"');
+    console.log('  node scripts/rename-files-v5.js "C:\\Users\\Username\\Videos"');
+    console.log('  node scripts/rename-files-v5.js "F:/RESP/cate_90年代"');
+    console.log('  node scripts/rename-files-v5.js "./videos"');
     console.log('\n注意: 在 PowerShell 中，建议使用引号包裹路径，或使用正斜杠');
     console.log('\n支持的文件名格式:');
-    console.log('  原格式: "曾经的QQ音乐三巨头！这TM才叫音乐！无损音质 99首合集 (P18. 18. 文件名称).mp4"');
+    console.log('  原格式: "20年前我们在听什么？90年代 那些我们曾经听过的歌 回忆杀 每一首皆是满满的回忆 (P4. 004.文件名称).mp4"');
     console.log('  新格式: "文件名称.mp4"');
     process.exit(1);
   }
