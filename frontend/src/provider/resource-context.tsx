@@ -104,6 +104,7 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
   const selectFile = (file: TFile) => {
     switch (file.type) {
       case "video/mp4":
+      case "video/x-flv":
       case "audio/mpeg":
       case "application/vnd.apple.mpegurl":
       case "application/x-mpegURL":

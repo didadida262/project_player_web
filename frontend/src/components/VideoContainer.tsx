@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useResources } from "../provider/resource-context";
 import Hls from "hls.js";
+import flvjs from "flv.js";
 import { isVideoFile } from "../utils/mimeTypes";
 import {
   HiOutlineSwitchHorizontal,
@@ -28,6 +29,7 @@ export default function VideoContainer() {
   const [videoRatio, setVideoRatio] = useState(16 / 9);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const hlsRef = useRef<Hls | null>(null);
+  const flvPlayerRef = useRef<flvjs.Player | null>(null);
 
   const handlePlayMode = () => {
     const next =
@@ -78,7 +80,7 @@ export default function VideoContainer() {
     }
   };
 
-  // 处理HLS流
+  // 处理HLS流和FLV文件
   useEffect(() => {
     if (!currentfileurl || !videoRef.current) return;
 
@@ -86,14 +88,22 @@ export default function VideoContainer() {
     const isM3u8 = currentFile.type?.includes('mpegurl') || 
                    currentFile.name?.toLowerCase().endsWith('.m3u8') || 
                    currentfileurl.includes('.m3u8');
+    const isFlv = currentFile.type === 'video/x-flv' || 
+                  currentFile.name?.toLowerCase().endsWith('.flv') || 
+                  currentfileurl.includes('.flv');
+
+    // 清理之前的实例
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+    if (flvPlayerRef.current) {
+      flvPlayerRef.current.destroy();
+      flvPlayerRef.current = null;
+    }
 
     if (isM3u8) {
-      // 清理之前的HLS实例
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-
+      // 处理HLS流
       if (Hls.isSupported()) {
         const hls = new Hls({
           enableWorker: true,
@@ -131,8 +141,26 @@ export default function VideoContainer() {
       } else {
         console.error('HLS is not supported in this browser');
       }
+    } else if (isFlv) {
+      // 处理FLV文件
+      if (flvjs.isSupported()) {
+        const flvPlayer = flvjs.createPlayer({
+          type: 'flv',
+          url: currentfileurl,
+        });
+        flvPlayer.attachMediaElement(video);
+        flvPlayer.load();
+        flvPlayerRef.current = flvPlayer;
+
+        // 播放准备就绪后自动播放
+        video.addEventListener('loadedmetadata', () => {
+          video.play().catch(console.error);
+        });
+      } else {
+        console.error('FLV is not supported in this browser');
+      }
     } else {
-      // 普通视频文件
+      // 普通视频文件（如MP4）
       video.src = currentfileurl;
     }
 
@@ -142,8 +170,12 @@ export default function VideoContainer() {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
+      if (flvPlayerRef.current) {
+        flvPlayerRef.current.destroy();
+        flvPlayerRef.current = null;
+      }
     };
-  }, [currentfileurl, currentFile.name]);
+  }, [currentfileurl, currentFile.name, currentFile.type]);
 
   useEffect(() => {
     if (!currentFile.name) return;
