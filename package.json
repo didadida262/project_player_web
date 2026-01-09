@@ -8,11 +8,13 @@
   "scripts": {
     "dev": "concurrently --kill-others-on-fail \"yarn --cwd frontend dev --host 127.0.0.1 --port 5173\" \"wait-on http://127.0.0.1:5173 && cross-env NODE_ENV=development ELECTRON_DEV_URL=http://127.0.0.1:5173 electron .\"",
     "build": "yarn --cwd frontend build",
-    "dist": "yarn build && electron-builder --win dir --publish never",
-    "dist:win": "yarn build && electron-builder --win dir --publish never",
-    "dist:win:nsis": "yarn build && electron-builder --win nsis --publish never",
-    "dist:win:all": "yarn build && electron-builder --win --publish never",
-    "dist:mac": "yarn build && electron-builder --mac --publish never"
+    "install:backend": "yarn --cwd backend install",
+    "prepare:backend": "node scripts/prepare-backend.js",
+    "dist": "yarn install:backend && yarn prepare:backend && yarn build && electron-builder --win dir --publish never",
+    "dist:win": "yarn install:backend && yarn prepare:backend && yarn build && electron-builder --win dir --publish never",
+    "dist:win:nsis": "yarn install:backend && yarn prepare:backend && yarn build && electron-builder --win nsis --publish never",
+    "dist:win:all": "yarn install:backend && yarn prepare:backend && yarn build && electron-builder --win --publish never",
+    "dist:mac": "yarn install:backend && yarn prepare:backend && yarn build && electron-builder --mac --publish never"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
@@ -27,11 +29,19 @@
     "files": [
       "electron/**/*",
       "frontend/dist/**/*",
-      "backend/**/*",
-      "backend/node_modules/**/*",
       "package.json",
       "package-lock.json",
       "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": ".temp-backend",
+        "to": "backend"
+      },
+      {
+        "from": ".temp-backend/node_modules",
+        "to": "backend/node_modules"
+      }
     ],
     "directories": {
       "output": "dist_electron"

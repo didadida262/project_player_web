@@ -1,7 +1,36 @@
 const path = require("path");
 const { app, BrowserWindow } = require("electron");
 
-const { startServer } = require("../backend/index");
+// 在打包后，backend 位于 resources/backend 目录中
+// 在开发环境中，backend 位于项目根目录的 backend 文件夹中
+let backendPath;
+if (app.isPackaged) {
+  // 打包后，backend 在 resources 目录中
+  backendPath = path.join(process.resourcesPath, "backend");
+} else {
+  // 开发环境，backend 在项目根目录
+  backendPath = path.join(__dirname, "../backend");
+}
+
+// 将 backend 的 node_modules 添加到模块搜索路径
+const backendNodeModules = path.join(backendPath, "node_modules");
+if (require("fs").existsSync(backendNodeModules)) {
+  const Module = require("module");
+  // 保存原始的 _nodeModulePaths 函数
+  const originalNodeModulePaths = Module._nodeModulePaths;
+  // 重写 _nodeModulePaths 函数
+  Module._nodeModulePaths = function(from) {
+    // 调用原始函数获取路径
+    const paths = originalNodeModulePaths.call(this, from);
+    // 将 backend/node_modules 添加到搜索路径
+    if (paths.indexOf(backendNodeModules) === -1) {
+      paths.unshift(backendNodeModules);
+    }
+    return paths;
+  };
+}
+
+const { startServer } = require(path.join(backendPath, "index"));
 
 const isDev = process.env.NODE_ENV === "development";
 const rendererUrl = isDev ? process.env.ELECTRON_DEV_URL || "http://127.0.0.1:5173" : null;
