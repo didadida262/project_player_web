@@ -1,4 +1,7 @@
 /** @type {import('tailwindcss').Config} */
+import forms from "@tailwindcss/forms";
+import typography from "@tailwindcss/typography";
+
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   darkMode: "class",
@@ -123,5 +126,5 @@ export default {
       },
     },
   },
-  plugins: [require("@tailwindcss/forms"), require("@tailwindcss/typography")],
+  plugins: [forms, typography],
 };
