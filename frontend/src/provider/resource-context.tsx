@@ -23,14 +23,6 @@ export interface TFile {
   path: string;
   type: string;
 }
-interface CategoryNode {
-  name: string;
-  path: string;
-  type: string;
-  children?: CategoryNode[];
-  isExpanded?: boolean;
-  allChildrenAreFolders?: boolean;
-}
 
 interface ResourcesContextType {
   currentpath: string;
