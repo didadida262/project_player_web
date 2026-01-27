@@ -194,10 +194,41 @@ export default function VideoContainer() {
         target?.getAttribute("contenteditable") === "true";
       if (isFormInput) return;
 
-      // 如果事件目标是 video 元素，且是左右方向键，允许视频的原生行为（前进/后退）
-      const isVideoElement = tag === "video";
-      if (isVideoElement && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
-        // 不阻止事件，让视频元素处理左右键（前进/后退）
+      const video = videoRef.current;
+      if (!video) return;
+
+      // 检查是否在全屏模式下
+      const isFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+
+      // 左右方向键：快进/后退（支持全屏模式）
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        // 如果不在全屏模式，且事件目标是 video 元素，允许视频的原生行为
+        if (!isFullscreen && tag === "video") {
+          return; // 让视频元素处理左右键（前进/后退）
+        }
+        
+        // 在全屏模式下，或者事件目标不是 video 元素时，手动处理快进后退
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const seekStep = 10; // 快进/后退的秒数
+        const currentTime = video.currentTime;
+        const duration = video.duration;
+        
+        if (event.key === "ArrowLeft") {
+          // 后退
+          const newTime = Math.max(0, currentTime - seekStep);
+          video.currentTime = newTime;
+        } else if (event.key === "ArrowRight") {
+          // 快进
+          const newTime = Math.min(duration, currentTime + seekStep);
+          video.currentTime = newTime;
+        }
         return;
       }
 
@@ -205,8 +236,6 @@ export default function VideoContainer() {
       if (event.code === "Space" || event.key === " ") {
         event.preventDefault();
         event.stopPropagation(); // 阻止事件冒泡，防止视频元素的原生行为
-        const video = videoRef.current;
-        if (!video) return;
         if (video.paused) {
           video.play().catch(console.error);
         } else {
