@@ -9,11 +9,29 @@ import api from "../api/index";
 import { IPCInfo } from "../utils/index";
 import { isVideoFile } from "../utils/mimeTypes";
 
+export interface CategoryNode {
+  name: string;
+  path: string;
+  type: string;
+  children?: CategoryNode[];
+  isExpanded?: boolean;
+  allChildrenAreFolders?: boolean;
+}
+
 export interface TFile {
   name: string;
   path: string;
   type: string;
 }
+interface CategoryNode {
+  name: string;
+  path: string;
+  type: string;
+  children?: CategoryNode[];
+  isExpanded?: boolean;
+  allChildrenAreFolders?: boolean;
+}
+
 interface ResourcesContextType {
   currentpath: string;
   categories: any[];
@@ -23,6 +41,8 @@ interface ResourcesContextType {
   currentFile: any;
   currentfileurl: any;
   palyerMode: string;
+  categoryTree: Map<string, CategoryNode[]>;
+  expandedPaths: Set<string>;
   setPalyerMode: (mode: string) => void;
   setcurrentfileurl: (file: any) => void;
   setCurrentFile: (file: any) => void;
@@ -31,6 +51,8 @@ interface ResourcesContextType {
   setCategories: (categories: any[]) => void;
   setSourcelist: (categories: any[]) => void;
   setPrevStack: (stack: TFile[]) => void;
+  setCategoryTree: (tree: Map<string, CategoryNode[]>) => void;
+  setExpandedPaths: (paths: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
   selectFile: (file: TFile) => void;
   getNextVideo: () => TFile | null;
 }
@@ -48,6 +70,8 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [sourcelist, setSourcelist] = useState<any[]>([]);
   const [prevStack, setPrevStack] = useState<TFile[]>([]);
+  const [categoryTree, setCategoryTree] = useState<Map<string, CategoryNode[]>>(new Map());
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
 
   const getNextVideo = () => {
     //   播放结束，根据当前播放模式，选择下一个
@@ -124,6 +148,8 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
         currentCate,
         currentFile,
         currentfileurl,
+        categoryTree,
+        expandedPaths,
         setPalyerMode,
         setCurrentpath,
         setSourcelist,
@@ -133,6 +159,8 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
         setCurrentCate,
         setCurrentFile,
         setcurrentfileurl,
+        setCategoryTree,
+        setExpandedPaths,
         selectFile,
         getNextVideo,
       }}
