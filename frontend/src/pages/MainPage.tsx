@@ -15,7 +15,7 @@ interface IProps {}
 
 export default function MainPage(props: IProps) {
   const { currentFile } = useResources();
-  const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(true);
   const [isRightCollapsed, setIsRightCollapsed] = useState(true);
 
   return (
