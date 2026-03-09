@@ -65,7 +65,7 @@ export default function HeaderComponent() {
             </button>
             {showInfo && (
               <div
-                className="absolute bottom-[-140px] right-0 w-[360px] bg-black/85 border border-white/20 rounded shadow-xl p-3 text-[13px] text-white font-mono backdrop-blur-md space-y-2"
+                className="absolute top-[calc(100%+6px)] right-[calc(100%+8px)] w-[360px] bg-black/85 border border-white/20 rounded shadow-xl p-3 text-[13px] text-white font-mono backdrop-blur-md space-y-2"
               >
               <div>
                 <div className="text-cyan-400 mb-1">当前路径</div>
