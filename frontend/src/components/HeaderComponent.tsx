@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { HiInformationCircle } from "react-icons/hi";
 import { useResources } from "../provider/resource-context";
 import SelectDir from "./SelectDir";
@@ -7,21 +7,6 @@ import SelectDir from "./SelectDir";
 export default function HeaderComponent() {
   const { currentpath } = useResources();
   const [showInfo, setShowInfo] = useState(false);
-  const infoRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (infoRef.current && !infoRef.current.contains(event.target as Node)) {
-        setShowInfo(false);
-      }
-    };
-    if (showInfo) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showInfo]);
 
   return (
     <div className="relative w-full h-[80px] overflow-visible">
@@ -66,18 +51,22 @@ export default function HeaderComponent() {
 
         <div className="ml-auto flex items-center gap-x-3 relative">
           <SelectDir />
-          <button
-            onClick={() => setShowInfo((prev) => !prev)}
-            className="flex items-center justify-center w-8 h-8 text-white hover:text-cyan-200 transition-colors focus:outline-none"
-            aria-label="切换路径提示"
+          <div
+            className="relative"
+            onMouseEnter={() => setShowInfo(true)}
+            onMouseLeave={() => setShowInfo(false)}
           >
-            <HiInformationCircle className="w-6 h-6" />
-          </button>
-          {showInfo && (
-            <div
-              ref={infoRef}
-              className="absolute bottom-[-140px] right-0 w-[360px] bg-black/85 border border-white/20 rounded shadow-xl p-3 text-[13px] text-white font-mono backdrop-blur-md space-y-2"
+            <button
+              type="button"
+              className="flex items-center justify-center w-8 h-8 text-white hover:text-cyan-200 transition-colors focus:outline-none"
+              aria-label="路径与快捷键说明"
             >
+              <HiInformationCircle className="w-6 h-6" />
+            </button>
+            {showInfo && (
+              <div
+                className="absolute bottom-[-140px] right-0 w-[360px] bg-black/85 border border-white/20 rounded shadow-xl p-3 text-[13px] text-white font-mono backdrop-blur-md space-y-2"
+              >
               <div>
                 <div className="text-cyan-400 mb-1">当前路径</div>
                 <div className="truncate text-gray-200">
@@ -93,8 +82,9 @@ export default function HeaderComponent() {
                   <li>M ：切换播放模式</li>
                 </ul>
               </div>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
