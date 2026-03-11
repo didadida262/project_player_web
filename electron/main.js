@@ -61,7 +61,7 @@ const createMainWindow = async () => {
     height: minHeight,    // 初始高度设为最小高度
     minWidth: minWidth,   // 最小宽度，禁止拖拽变小
     minHeight: minHeight, // 最小高度，禁止拖拽变小
-    title: "Miles Player",
+    title: "Isshin Player",
     autoHideMenuBar: true,
     webPreferences: {
       contextIsolation: true,

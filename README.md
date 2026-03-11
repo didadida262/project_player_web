@@ -6,7 +6,7 @@
 
 - **后端**：`Node.js + Express 5` 负责目录树扫描（`/getFiles`）、视频流代理（`/video`）、HLS/mp4 支持、CORS、全局错误处理与 MIME 分类，满足低延迟流媒体服务需求。
 - **前端**：`Vite + React 18 + TypeScript + Tailwind` 构建 SPA，启用 `HashRouter` 保证 Electron pack 的路径稳定，`ResourcesProvider` 管理目录、播放、PDF/图片、Toast 状态，`VideoContainer` 自动识别 HLS 与普通视频。
-- **Electron**：主进程在 `electron/main.js` 同步启动 Express 后端，开发模式加载 Vite，生产加载 `frontend/dist`（`base: "./"`）；`electron-builder` 在根 `package.json > build` 控制 `Miles Player` 名称、`dist_electron` 输出、Windows `nsis/portable` 和 macOS `dmg/zip` 以及 icon/appId。
+- **Electron**：主进程在 `electron/main.js` 同步启动 Express 后端，开发模式加载 Vite，生产加载 `frontend/dist`（`base: "./"`）；`electron-builder` 在根 `package.json > build` 控制 `Isshin Player` 名称、`dist_electron` 输出、Windows `nsis/portable` 和 macOS `dmg/zip` 以及 icon/appId。
 
 ## 核心功能
 

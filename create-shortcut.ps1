@@ -2,9 +2,9 @@
 # 使用方法: 在项目根目录右键 -> "使用 PowerShell 运行"
 
 $projectRoot = $PSScriptRoot
-$exePath = Join-Path $projectRoot "dist_electron\win-unpacked\Miles Player.exe"
+$exePath = Join-Path $projectRoot "dist_electron\win-unpacked\Isshin Player.exe"
 $desktopPath = [Environment]::GetFolderPath("Desktop")
-$shortcutPath = Join-Path $desktopPath "Miles Player.lnk"
+$shortcutPath = Join-Path $desktopPath "Isshin Player.lnk"
 
 if (-Not (Test-Path $exePath)) {
     Write-Host "错误: 找不到 exe 文件。请先运行 'yarn dist:win' 构建应用程序。" -ForegroundColor Red
@@ -17,7 +17,7 @@ $WScriptShell = New-Object -ComObject WScript.Shell
 $Shortcut = $WScriptShell.CreateShortcut($shortcutPath)
 $Shortcut.TargetPath = $exePath
 $Shortcut.WorkingDirectory = Split-Path $exePath
-$Shortcut.Description = "Miles Player - 多模态流媒体播放器"
+$Shortcut.Description = "Isshin Player - 多模态流媒体播放器"
 # 如果有图标文件，可以设置：
 # $Shortcut.IconLocation = "path\to\icon.ico"
 $Shortcut.Save()
