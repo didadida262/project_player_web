@@ -2,7 +2,13 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const cors = require("cors"); // 引入 CORS 模块
-const { getMimeTypeFromExtension, FILE_TYPE_CATEGORIES } = require("./mimeTypes");
+const {
+  getMimeTypeFromExtension,
+  FILE_TYPE_CATEGORIES,
+  isVideoFile,
+  isAudioFile,
+  isDirectory,
+} = require("./mimeTypes");
 
 const DEFAULT_PORT = 3001;
 const DEFAULT_SCAN_PATH = process.env.PLAYER_API_DEFAULT_PATH || process.cwd();
@@ -122,13 +128,18 @@ const createExpressApp = (options = {}) => {
     return normalizedName.includes(normalizedKeyword);
   };
 
+  /** 仅保留目录与音视频文件，过滤掉 .DS_Store 等非媒体文件 */
+  const isMediaOrDir = (file) =>
+    isDirectory(file.type) || isVideoFile(file.type) || isAudioFile(file.type);
+
   app.get("/getFiles", async (req, res) => {
     const scanPath = req.query.path || basePath;
     const keyword = req.query.keyword || "";
 
     const files = await readDirectory(scanPath);
+    const mediaOrDirs = files.filter(isMediaOrDir);
     const normalizedKeyword = normalizeKeyword(keyword);
-    const filteredFiles = files.filter((file) =>
+    const filteredFiles = mediaOrDirs.filter((file) =>
       matchByKeyword(file.name, normalizedKeyword),
     );
 
