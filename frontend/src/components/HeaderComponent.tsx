@@ -20,7 +20,7 @@ export default function HeaderComponent() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
-            Player
+            Isshin Player
           </motion.span>
           <motion.div
             className="w-2 h-2 bg-cyan-400 rounded-full"
