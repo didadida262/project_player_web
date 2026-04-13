@@ -8,7 +8,9 @@ import {
   HiOutlineSparkles,
   HiOutlineRefresh,
   HiOutlinePlay,
+  HiOutlineFolderOpen,
 } from "react-icons/hi";
+import customToast from "./customToast";
 
 export default function VideoContainer() {
   const {
@@ -40,6 +42,23 @@ export default function VideoContainer() {
         : "order";
     setPalyerMode(next);
   };
+  const handleRevealInFolder = async () => {
+    const filePath = currentFile?.path;
+    if (!filePath || typeof filePath !== "string") {
+      customToast.error("无法获取文件路径");
+      return;
+    }
+    const api = window.electronAPI;
+    if (!api?.showItemInFolder) {
+      customToast.info("请在桌面版（Electron）中使用此功能");
+      return;
+    }
+    const result = await api.showItemInFolder(filePath);
+    if (!result?.ok) {
+      customToast.error(result?.error || "打开文件夹失败");
+    }
+  };
+
   const handleNext = () => {
     if (palyerMode === "single") {
       // 单曲循环：直接重播当前视频
@@ -396,20 +415,28 @@ export default function VideoContainer() {
     <div className="w-full h-full flex flex-col">
       {/* 文件名显示区域 - 移到视频上方 */}
       {currentFile.name && (
-        <div className="w-full px-4 py-2">
+        <div className="w-full px-4 py-2 flex items-center gap-2 min-w-0">
           <p
-            className="text-[16px] font-semibold bg-gradient-to-r from-cyan-300 via-white to-purple-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(56,189,248,0.7)]"
+            className="flex-1 min-w-0 text-[16px] font-semibold bg-gradient-to-r from-cyan-300 via-white to-purple-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(56,189,248,0.7)]"
             title={currentFile.name}
             style={{
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
-              maxWidth: "100%",
               letterSpacing: "0.5px",
             }}
           >
             {displayFileName}
           </p>
+          <button
+            type="button"
+            onClick={handleRevealInFolder}
+            className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-md text-cyan-200/90 hover:text-cyan-100 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+            title="在访达/资源管理器中显示此文件"
+            aria-label="在文件夹中显示当前视频"
+          >
+            <HiOutlineFolderOpen className="w-6 h-6" />
+          </button>
         </div>
       )}
       <div

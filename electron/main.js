@@ -1,5 +1,6 @@
 const path = require("path");
-const { app, BrowserWindow } = require("electron");
+const fs = require("fs");
+const { app, BrowserWindow, ipcMain, shell } = require("electron");
 
 // 在打包后，backend 位于 resources/backend 目录中
 // 在开发环境中，backend 位于项目根目录的 backend 文件夹中
@@ -38,6 +39,25 @@ const backendPort = Number(process.env.PLAYER_API_PORT || 3001);
 
 let backendInstance = null;
 
+ipcMain.handle("shell:show-item-in-folder", async (_event, fullPath) => {
+  if (typeof fullPath !== "string" || !fullPath.trim()) {
+    return { ok: false, error: "无效的文件路径" };
+  }
+  const normalized = path.normalize(fullPath.trim());
+  if (!path.isAbsolute(normalized)) {
+    return { ok: false, error: "路径必须为绝对路径" };
+  }
+  if (!fs.existsSync(normalized)) {
+    return { ok: false, error: "文件不存在" };
+  }
+  try {
+    shell.showItemInFolder(normalized);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e?.message || String(e) };
+  }
+});
+
 const startBackend = () => {
   if (backendInstance) {
     return backendInstance;
@@ -64,6 +84,7 @@ const createMainWindow = async () => {
     title: "Isshin Player",
     autoHideMenuBar: true,
     webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,

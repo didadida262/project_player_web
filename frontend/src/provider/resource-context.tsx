@@ -3,6 +3,8 @@ import {
   useContext,
   useState,
   useEffect,
+  useRef,
+  useCallback,
   ReactNode,
 } from "react";
 import api from "../api/index";
@@ -47,6 +49,9 @@ interface ResourcesContextType {
   setExpandedPaths: (paths: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
   selectFile: (file: TFile) => void;
   getNextVideo: () => TFile | null;
+  /** 主页面注册：选择路径成功后调用以展开左侧栏 */
+  registerExpandLeftSidebar: (fn: (() => void) | null) => void;
+  requestExpandLeftSidebar: () => void;
 }
 
 const ResourcesContext = createContext<ResourcesContextType | undefined>(
@@ -64,6 +69,14 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
   const [prevStack, setPrevStack] = useState<TFile[]>([]);
   const [categoryTree, setCategoryTree] = useState<Map<string, CategoryNode[]>>(new Map());
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
+
+  const expandLeftSidebarRef = useRef<(() => void) | null>(null);
+  const registerExpandLeftSidebar = useCallback((fn: (() => void) | null) => {
+    expandLeftSidebarRef.current = fn;
+  }, []);
+  const requestExpandLeftSidebar = useCallback(() => {
+    expandLeftSidebarRef.current?.();
+  }, []);
 
   const getNextVideo = () => {
     //   播放结束，根据当前播放模式，选择下一个
@@ -155,6 +168,8 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
         setExpandedPaths,
         selectFile,
         getNextVideo,
+        registerExpandLeftSidebar,
+        requestExpandLeftSidebar,
       }}
     >
       {children}

@@ -6,7 +6,7 @@ import ImgContainer from "../components/ImgContainer";
 import AudioContainer from "../components/AudioContainer";
 import PdfContainer from "../components/PdfContainer";
 import EmptyPlayer from "../components/EmptyPlayer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiChevronLeft } from "react-icons/hi";
 import { isVideoFile, isImageFile, isAudioFile, isDocumentFile } from "../utils/mimeTypes";
@@ -14,9 +14,14 @@ import { isVideoFile, isImageFile, isAudioFile, isDocumentFile } from "../utils/
 interface IProps {}
 
 export default function MainPage(props: IProps) {
-  const { currentFile } = useResources();
+  const { currentFile, registerExpandLeftSidebar } = useResources();
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(true);
   const [isRightCollapsed, setIsRightCollapsed] = useState(true);
+
+  useEffect(() => {
+    registerExpandLeftSidebar(() => setIsLeftCollapsed(false));
+    return () => registerExpandLeftSidebar(null);
+  }, [registerExpandLeftSidebar]);
 
   return (
     <div className="flex justify-between flex-col items-center w-full h-full text-[white] px-[5px]">
