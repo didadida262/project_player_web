@@ -102,6 +102,20 @@
   min-width: 100%;
 }
 
+@layer base {
+  /*
+   * Win + Electron/Chromium 默认 button 聚焦环常用系统 accent / -webkit-focus-ring-color，
+   * 易呈现黄、金色描边；与 transition-all 叠加时还可能产生描边闪烁。
+   */
+  button:focus,
+  button:focus-visible {
+    outline: none !important;
+  }
+  button:focus-visible:not(:disabled) {
+    box-shadow: 0 0 0 2px rgb(56 189 248 / 0.55);
+  }
+}
+
 /* 在你的全局 CSS 文件中添加 */
 /* .ant-menu-item,
 .ant-menu-submenu-title {

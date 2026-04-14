@@ -74,10 +74,11 @@ export default function SelectDir(props: IProps) {
       />
       
       {/* 按钮 */}
-      <button 
+      <button
+        type="button"
         onClick={handleSelectDirectory}
         disabled={isScanning}
-        className="select-none px-4 py-2 text-[18px] h-8 rounded-none text-white hover:opacity-90 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+        className="select-none px-4 py-2 text-[18px] h-8 rounded-none text-white hover:opacity-90 transition-[background-color,opacity] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
         style={{ 
           backgroundColor: buttonColor,
           '--hover-color': hoverColor

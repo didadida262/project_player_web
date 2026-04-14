@@ -474,22 +474,20 @@ export default function VideoContainer() {
       {/* 文件名显示区域 - 移到视频上方 */}
       {currentFile.name && (
         <div className="w-full px-4 py-2 flex items-center gap-2 min-w-0">
-          <p
-            className="flex-1 min-w-0 text-[16px] font-semibold bg-gradient-to-r from-cyan-300 via-white to-purple-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(56,189,248,0.7)]"
-            title={currentFile.name}
-            style={{
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              letterSpacing: "0.5px",
-            }}
-          >
-            {displayFileName}
-          </p>
+          {/* flex-1 放在外层：只占位布局；title 放在内层 shrink-to-fit，避免整行空白也触发 tooltip */}
+          <div className="min-w-0 flex-1 overflow-hidden flex items-center justify-start">
+            <span
+              className="inline-block max-w-full truncate text-left text-[16px] font-semibold bg-gradient-to-r from-cyan-300 via-white to-purple-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(56,189,248,0.7)]"
+              title={currentFile.name}
+              style={{ letterSpacing: "0.5px" }}
+            >
+              {displayFileName}
+            </span>
+          </div>
           <button
             type="button"
             onClick={handleRevealInFolder}
-            className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-md text-cyan-200/90 hover:text-cyan-100 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+            className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-md text-cyan-200/90 hover:text-cyan-100 hover:bg-white/10 transition-colors focus:outline-none"
             title="在访达/资源管理器中显示此文件"
             aria-label="在文件夹中显示当前视频"
           >
@@ -521,8 +519,9 @@ export default function VideoContainer() {
       </div>
       <div className="operation w-full h-[50px] flex justify-start items-center gap-x-[10px]">
         <button
+          type="button"
           onClick={handlePlayMode}
-          className="px-4 py-2 text-[15px] h-9 rounded text-white hover:opacity-90 transition-all flex items-center gap-2 justify-center"
+          className="px-4 py-2 text-[15px] h-9 rounded text-white hover:opacity-90 transition-[background-color,opacity] flex items-center gap-2 justify-center focus:outline-none"
           style={{
             backgroundColor:
               palyerMode === "order"
@@ -559,8 +558,9 @@ export default function VideoContainer() {
         </button>
 
         <button
+          type="button"
           onClick={handleNext}
-          className="px-4 py-2 text-[15px] h-9 rounded text-white hover:opacity-90 transition-all flex items-center gap-2 justify-center"
+          className="px-4 py-2 text-[15px] h-9 rounded text-white hover:opacity-90 transition-[background-color,opacity] flex items-center gap-2 justify-center focus:outline-none"
           style={{
             backgroundColor: "#10b981", // 绿色
             "--hover-color": "#059669",
