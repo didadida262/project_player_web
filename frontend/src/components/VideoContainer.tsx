@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { useResources } from "../provider/resource-context";
 import Hls from "hls.js";
 import flvjs from "flv.js";
@@ -11,6 +17,27 @@ import {
   HiOutlineFolderOpen,
 } from "react-icons/hi";
 import customToast from "./customToast";
+
+/**
+ * Blink/Electron：首帧自动播放时原生阴影控件常用过时的盒宽排版，控制条会「变短」；
+ * 点击 video 会触发布局而恢复。这里用亚像素宽度抖动 + 强制 layout 诱发同一条修复路径，避免依赖用户点击。
+ */
+function nudgeNativeMediaControlsLayout(video: HTMLVideoElement | null) {
+  if (!video) return;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const widthStr = video.style.width;
+      const w = parseFloat(widthStr);
+      if (Number.isFinite(w) && widthStr.endsWith("px")) {
+        video.style.width = `${w - 0.25}px`;
+        void video.offsetWidth;
+        video.style.width = widthStr;
+      }
+      void video.offsetWidth;
+      void video.getBoundingClientRect();
+    });
+  });
+}
 
 export default function VideoContainer() {
   const {
@@ -28,7 +55,8 @@ export default function VideoContainer() {
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [videoRatio, setVideoRatio] = useState(16 / 9);
+  /** 当前文件的真实宽高比；换源前为 null，避免沿用旧比例导致框比画面宽、原生控制条与画面不齐 */
+  const [videoRatio, setVideoRatio] = useState<number | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const hlsRef = useRef<Hls | null>(null);
   const flvPlayerRef = useRef<flvjs.Player | null>(null);
@@ -195,6 +223,10 @@ export default function VideoContainer() {
       }
     };
   }, [currentfileurl, currentFile.name, currentFile.type]);
+
+  useEffect(() => {
+    setVideoRatio(null);
+  }, [currentfileurl, currentFile.name]);
 
   useEffect(() => {
     if (!currentFile.name) return;
@@ -374,16 +406,36 @@ export default function VideoContainer() {
     };
   }, []);
 
+  // 盒宽或片源比例变化后，在提交到 DOM 的同一轮末尾推一把原生控件排版（修复首帧截断）
+  useLayoutEffect(() => {
+    nudgeNativeMediaControlsLayout(videoRef.current);
+  }, [
+    containerSize.width,
+    containerSize.height,
+    videoRatio,
+    currentfileurl,
+  ]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const onPlaying = () => nudgeNativeMediaControlsLayout(v);
+    v.addEventListener("playing", onPlaying);
+    return () => v.removeEventListener("playing", onPlaying);
+  }, [currentfileurl]);
+
   // 根据容器尺寸和视频宽高比计算最佳显示尺寸，尽可能填满容器
-  const calculateVideoSize = () => {
-    // 如果容器尺寸还没有正确初始化，使用 maxWidth/maxHeight 限制，而不是固定尺寸
-    // 这样可以避免在初始化时使用错误的尺寸导致溢出
-    if (!containerSize.width || !containerSize.height || !videoRatio) {
-      return { 
-        maxWidth: "100%", 
+  const calculateVideoSize = (): CSSProperties => {
+    // 未拿到当前片源宽高比或容器未就绪时：只限制最大边，由 object-fit: contain 适配；
+    // 固定像素宽高必须在比例正确时再用，否则原生控制条会铺满「错比例的框」，与画面宽度不一致
+    if (!containerSize.width || !containerSize.height || videoRatio == null) {
+      return {
+        maxWidth: "100%",
         maxHeight: "100%",
         width: "auto",
         height: "auto",
+        objectFit: "contain",
+        display: "block",
       };
     }
     
@@ -406,13 +458,19 @@ export default function VideoContainer() {
     width = Math.min(width, containerSize.width);
     height = Math.min(height, containerSize.height);
     
-    return { width: `${width}px`, height: `${height}px` };
+    return {
+      width: `${width}px`,
+      height: `${height}px`,
+      // 框已与片源比例一致；contain 在比例精确时铺满框，取整略有偏差时比 fill 更不易拉变形
+      objectFit: "contain",
+      display: "block",
+    };
   };
 
   const videoStyle: CSSProperties = calculateVideoSize();
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full min-w-0 flex flex-col">
       {/* 文件名显示区域 - 移到视频上方 */}
       {currentFile.name && (
         <div className="w-full px-4 py-2 flex items-center gap-2 min-w-0">
@@ -441,13 +499,13 @@ export default function VideoContainer() {
       )}
       <div
         ref={containerRef}
-        className="video w-full flex-1 selectedG flex justify-center items-center rounded-lg overflow-hidden "
+        className="video native-video-host w-full min-h-0 min-w-0 flex-1 selectedG flex justify-center items-center rounded-lg"
       >
         <video
           ref={videoRef}
           muted={false}
           tabIndex={-1}
-          className="object-contain outline-none focus:outline-none focus:ring-0 focus:border-0"
+          className="outline-none focus:outline-none focus:ring-0 focus:border-0"
           autoPlay
           controls
           style={videoStyle}

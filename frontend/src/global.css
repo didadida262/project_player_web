@@ -88,6 +88,20 @@
   margin-left: auto;
 }
 
+/*
+ * Electron / Chromium：祖先上的 overflow:hidden、backdrop-filter 等会让原生 <video>
+ * 阴影 DOM 里的控制条宽度算错（只铺一部分、右侧像被「截断」）。父级不要用 overflow 裁切 video，
+ * 并在此处强制控件层占满元素宽度（非标准伪元素，仅 WebKit/Blink）。
+ */
+.native-video-host video::-webkit-media-controls-enclosure {
+  width: 100%;
+  max-width: 100%;
+}
+.native-video-host video::-webkit-media-controls-panel {
+  width: 100%;
+  min-width: 100%;
+}
+
 /* 在你的全局 CSS 文件中添加 */
 /* .ant-menu-item,
 .ant-menu-submenu-title {

@@ -56,7 +56,7 @@ export default function MainPage(props: IProps) {
 
         {/* 中间视频区 */}
         <div className="flex-1 h-full flex flex-col justify-between items-center markBorderT backdrop-blur-sm bg-black/20 min-w-0">
-          <div className="w-full px-[8px] py-[8px] flex-1">
+          <div className="w-full min-w-0 px-[8px] py-[8px] flex-1">
             {currentFile.type && isVideoFile(currentFile.type) && (
               <VideoContainer />
             )}
