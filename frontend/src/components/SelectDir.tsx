@@ -8,8 +8,18 @@ import { PathInputDialog } from "./ui/path-input-dialog";
 interface IProps {}
 
 export default function SelectDir(props: IProps) {
-  const { currentpath, setCurrentpath, setCategories, requestExpandLeftSidebar } =
-    useResources();
+  const {
+    currentpath,
+    setCurrentpath,
+    setCategories,
+    requestExpandLeftSidebar,
+    setCategoryTree,
+    setExpandedPaths,
+    setCurrentCate,
+    setSourcelist,
+    setCurrentFile,
+    setcurrentfileurl,
+  } = useResources();
   const [isScanning, setIsScanning] = useState(false);
   const [showPathDialog, setShowPathDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,7 +53,13 @@ export default function SelectDir(props: IProps) {
 
   const handlePathConfirm = async (path: string) => {
     setCurrentpath(path);
-    
+    setCategoryTree(new Map());
+    setExpandedPaths(new Set());
+    setCurrentCate({});
+    setSourcelist([]);
+    setCurrentFile({});
+    setcurrentfileurl('');
+
     // 自动开始扫描
     setIsScanning(true);
     try {

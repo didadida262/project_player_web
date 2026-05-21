@@ -31,7 +31,7 @@ export default function MainPage(props: IProps) {
           {!isLeftCollapsed && (
             <motion.div
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 190, opacity: 1 }}
+              animate={{ width: 280, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
               className="h-full markBorderT backdrop-blur-sm bg-black/20 overflow-hidden"

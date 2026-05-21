@@ -13,7 +13,7 @@ interface CategoryItemProps {
   currentCate: any;
   expandedPaths: Set<string>;
   onToggleExpand: (path: string) => void;
-  children?: CategoryNode[];
+  categoryTree: Map<string, CategoryNode[]>;
 }
 
 function CategoryItem({ 
@@ -23,8 +23,9 @@ function CategoryItem({
   currentCate, 
   expandedPaths,
   onToggleExpand,
-  children
+  categoryTree,
 }: CategoryItemProps) {
+  const children = categoryTree.get(item.path);
   const isExpanded = expandedPaths.has(item.path);
   const hasChildren = children && children.length > 0;
   const indent = level * 16;
@@ -73,7 +74,7 @@ function CategoryItem({
           className="flex-1 truncate text-gray-200"
           onClick={handleItemClick}
         >
-          {item.name.length > 20 ? item.name.slice(0, 20) + "..." : item.name}
+          {item.name}
         </span>
       </div>
       <AnimatePresence>
@@ -109,7 +110,7 @@ function CategoryItem({
                     currentCate={currentCate}
                     expandedPaths={expandedPaths}
                     onToggleExpand={onToggleExpand}
-                    children={child.children}
+                    categoryTree={categoryTree}
                   />
                 </motion.div>
               ))}
@@ -157,49 +158,34 @@ export default function CategoryContainer() {
         return;
       }
 
-      // 判断是否所有文件都是文件夹
-      const allAreFolders = res.every((item: any) => isDirectory(item.type));
-      
-      if (allAreFolders) {
-        // 如果都是文件夹，在左侧显示子文件夹（树形结构）
-        const folderNodes: CategoryNode[] = res.map((item: any) => ({
-          name: item.name,
-          path: item.path,
-          type: item.type,
-          allChildrenAreFolders: undefined, // 将在点击时确定
-        }));
-        
-        // 更新树形结构
-        const newTree = new Map(categoryTree);
-        const alreadyHasChildren = newTree.has(file.path);
-        newTree.set(file.path, folderNodes);
-        setCategoryTree(newTree);
-        
-        // 只有在第一次加载时才自动展开（如果之前没有子节点）
-        if (!alreadyHasChildren) {
-          setExpandedPaths((prev) => {
-            const newSet = new Set(prev);
-            newSet.add(file.path);
-            return newSet;
-          });
-        }
-        
-        // 清空右侧文件列表
-        setSourcelist([]);
-      } else {
-        // 如果不是全部都是文件夹，在右侧显示文件列表
-        setSourcelist(res);
-        
-        // 清除该路径的子节点（因为不是全部都是文件夹，所以不在左侧显示）
-        const newTree = new Map(categoryTree);
-        newTree.delete(file.path);
-        setCategoryTree(newTree);
-        
-        // 自动播放第一个文件（如果不是文件夹）
-        const firstNonFolder = res.find((item: any) => !isDirectory(item.type));
-        if (firstNonFolder) {
-          setCurrentFile(firstNonFolder);
-        }
+      const folders = res.filter((item: any) => isDirectory(item.type));
+      const files = res.filter((item: any) => !isDirectory(item.type));
+
+      // 子文件夹始终显示在左侧树形结构中
+      const folderNodes: CategoryNode[] = folders.map((item: any) => ({
+        name: item.name,
+        path: item.path,
+        type: item.type,
+      }));
+
+      const newTree = new Map(categoryTree);
+      const alreadyHasChildren = newTree.has(file.path);
+      newTree.set(file.path, folderNodes);
+      setCategoryTree(newTree);
+
+      if (folderNodes.length > 0 && !alreadyHasChildren) {
+        setExpandedPaths((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(file.path);
+          return newSet;
+        });
+      }
+
+      // 右侧仅显示当前文件夹中的文件
+      setSourcelist(files);
+
+      if (files.length > 0) {
+        setCurrentFile(files[0]);
       }
     } catch (error) {
       console.error('获取文件列表失败:', error);
@@ -227,9 +213,7 @@ export default function CategoryContainer() {
 
   return (
     <div className="w-full h-full px-[8px] py-[8px] flex flex-col justify-start gap-y-2 overflow-y-auto">
-      {folderItems.map((item: any, index: number) => {
-        const children = categoryTree.get(item.path);
-        return (
+      {folderItems.map((item: any, index: number) => (
           <CategoryItem
             key={`${item.path}-${index}`}
             item={item}
@@ -238,10 +222,9 @@ export default function CategoryContainer() {
             currentCate={currentCate}
             expandedPaths={expandedPaths}
             onToggleExpand={handleToggleExpand}
-            children={children}
+            categoryTree={categoryTree}
           />
-        );
-      })}
+      ))}
     </div>
   );
 }

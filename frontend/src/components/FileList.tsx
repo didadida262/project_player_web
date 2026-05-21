@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { HiSearch, HiOutlineRefresh, HiOutlineSearch } from 'react-icons/hi'
 import { getFiles } from '@/api/common'
 import type { ApiResponse } from '@/api'
+import { isDirectory } from '../utils/mimeTypes'
 
 export default function FileList() {
   const { sourcelist, currentFile, currentCate, setSourcelist, setCurrentFile } =
@@ -35,7 +36,7 @@ export default function FileList() {
           list = (res as ApiResponse<any[]>)?.data || []
         }
 
-        setSourcelist(list)
+        setSourcelist(list.filter((item) => !isDirectory(item.type)))
       } catch (error) {
         console.error('搜索文件失败', error)
       } finally {
