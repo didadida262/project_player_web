@@ -8,7 +8,6 @@ import {
   ReactNode,
 } from "react";
 import api from "../api/index";
-import { IPCInfo } from "../utils/index";
 import { isVideoFile } from "../utils/mimeTypes";
 
 export interface CategoryNode {

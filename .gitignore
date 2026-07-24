@@ -10,8 +10,11 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-dist_electron
 *.local
+
+# Legacy Electron packaging leftovers
+dist_electron
+.temp-backend
 
 # Tauri
 src-tauri/target

@@ -89,7 +89,7 @@
 }
 
 /*
- * Electron / Chromium：祖先上的 overflow:hidden、backdrop-filter 等会让原生 <video>
+ * Chromium/WebKit：祖先上的 overflow:hidden、backdrop-filter 等会让原生 <video>
  * 阴影 DOM 里的控制条宽度算错（只铺一部分、右侧像被「截断」）。父级不要用 overflow 裁切 video，
  * 并在此处强制控件层占满元素宽度（非标准伪元素，仅 WebKit/Blink）。
  */
@@ -104,7 +104,7 @@
 
 @layer base {
   /*
-   * Win + Electron/Chromium 默认 button 聚焦环常用系统 accent / -webkit-focus-ring-color，
+   * Windows + Chromium 默认 button 聚焦环常用系统 accent / -webkit-focus-ring-color，
    * 易呈现黄、金色描边；与 transition-all 叠加时还可能产生描边闪烁。
    */
   button:focus,

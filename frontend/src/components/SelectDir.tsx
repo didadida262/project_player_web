@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import api from "../api/index";
-import { IPCInfo } from "../utils/index";
 import { useResources } from "../provider/resource-context";
 import { getFiles } from "@/api/common";
 import { PathInputDialog } from "./ui/path-input-dialog";
