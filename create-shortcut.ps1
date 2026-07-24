@@ -2,13 +2,17 @@
 # 使用方法: 在项目根目录右键 -> "使用 PowerShell 运行"
 
 $projectRoot = $PSScriptRoot
-$exePath = Join-Path $projectRoot "dist_electron\win-unpacked\Isshin Player.exe"
+$candidates = @(
+    (Join-Path $projectRoot "src-tauri\target\release\isshin-player.exe"),
+    (Join-Path $projectRoot "src-tauri\target\release\Isshin Player.exe")
+)
+$exePath = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 $desktopPath = [Environment]::GetFolderPath("Desktop")
 $shortcutPath = Join-Path $desktopPath "Isshin Player.lnk"
 
-if (-Not (Test-Path $exePath)) {
+if (-Not $exePath) {
     Write-Host "错误: 找不到 exe 文件。请先运行 'yarn dist:win' 构建应用程序。" -ForegroundColor Red
-    Write-Host "查找路径: $exePath" -ForegroundColor Yellow
+    Write-Host "预期路径: src-tauri\target\release\isshin-player.exe" -ForegroundColor Yellow
     Read-Host "按回车键退出"
     exit 1
 }
@@ -18,12 +22,8 @@ $Shortcut = $WScriptShell.CreateShortcut($shortcutPath)
 $Shortcut.TargetPath = $exePath
 $Shortcut.WorkingDirectory = Split-Path $exePath
 $Shortcut.Description = "Isshin Player - 多模态流媒体播放器"
-# 如果有图标文件，可以设置：
-# $Shortcut.IconLocation = "path\to\icon.ico"
 $Shortcut.Save()
 
-Write-Host "✓ 桌面快捷方式创建成功！" -ForegroundColor Green
+Write-Host "桌面快捷方式创建成功！" -ForegroundColor Green
 Write-Host "位置: $shortcutPath" -ForegroundColor Cyan
 Read-Host "按回车键退出"
-
-

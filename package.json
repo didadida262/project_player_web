@@ -4,72 +4,15 @@
   "version": "1.0.0",
   "description": "A multi-modal streaming player for local resources",
   "author": "Isshin Player Team",
-  "main": "electron/main.js",
   "scripts": {
-    "dev": "concurrently --kill-others-on-fail \"yarn --cwd frontend dev --host 127.0.0.1 --port 5173\" \"wait-on http://127.0.0.1:5173 && cross-env NODE_ENV=development ELECTRON_DEV_URL=http://127.0.0.1:5173 electron .\"",
+    "dev": "tauri dev",
     "build": "yarn --cwd frontend build",
-    "install:backend": "yarn --cwd backend install",
-    "prepare:backend": "node scripts/prepare-backend.js",
-    "dist": "yarn install:backend && yarn prepare:backend && yarn build && electron-builder --win dir --publish never",
-    "dist:win": "yarn install:backend && yarn prepare:backend && yarn build && electron-builder --win dir --publish never",
-    "dist:win:nsis": "yarn install:backend && yarn prepare:backend && yarn build && electron-builder --win nsis --publish never",
-    "dist:win:all": "yarn install:backend && yarn prepare:backend && yarn build && electron-builder --win --publish never",
-    "dist:mac": "yarn install:backend && yarn prepare:backend && yarn build && electron-builder --mac --publish never"
+    "tauri": "tauri",
+    "dist": "tauri build",
+    "dist:mac": "tauri build --bundles dmg,app",
+    "dist:win": "tauri build --bundles nsis,msi"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1",
-    "cross-env": "^10.1.0",
-    "electron": "^26.3.1",
-    "electron-builder": "^26.0.0",
-    "wait-on": "^7.0.2"
-  },
-  "build": {
-    "appId": "com.projectplayer.app",
-    "productName": "Isshin Player",
-    "files": [
-      "electron/**/*",
-      "frontend/dist/**/*",
-      "package.json",
-      "package-lock.json",
-      "node_modules/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": ".temp-backend",
-        "to": "backend"
-      },
-      {
-        "from": ".temp-backend/node_modules",
-        "to": "backend/node_modules"
-      }
-    ],
-    "directories": {
-      "output": "dist_electron"
-    },
-
-    "mac": {
-      "target": ["dmg", "zip"],
-      "category": "public.app-category.video"
-    },
-    "win": {
-      "target": [
-        {
-          "target": "dir",
-          "arch": ["x64"]
-        }
-      ],
-      "artifactName": "${productName}-${version}-${arch}",
-      "forceCodeSigning": false,
-      "signAndEditExecutable": false
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Isshin Player",
-      "deleteAppDataOnUninstall": false
-    }
+    "@tauri-apps/cli": "^2"
   }
 }
-

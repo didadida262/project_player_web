@@ -19,7 +19,7 @@ import {
 import customToast from "./customToast";
 
 /**
- * Blink/Electron：首帧自动播放时原生阴影控件常用过时的盒宽排版，控制条会「变短」；
+ * Blink：首帧自动播放时原生阴影控件常用过时的盒宽排版，控制条会「变短」；
  * 点击 video 会触发布局而恢复。这里用亚像素宽度抖动 + 强制 layout 诱发同一条修复路径，避免依赖用户点击。
  */
 function nudgeNativeMediaControlsLayout(video: HTMLVideoElement | null) {
@@ -76,14 +76,17 @@ export default function VideoContainer() {
       customToast.error("无法获取文件路径");
       return;
     }
-    const api = window.electronAPI;
-    if (!api?.showItemInFolder) {
-      customToast.info("请在桌面版（Electron）中使用此功能");
-      return;
-    }
-    const result = await api.showItemInFolder(filePath);
-    if (!result?.ok) {
-      customToast.error(result?.error || "打开文件夹失败");
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const result = await invoke<{ ok: boolean; error?: string }>(
+        "show_item_in_folder",
+        { path: filePath },
+      );
+      if (!result?.ok) {
+        customToast.error(result?.error || "打开文件夹失败");
+      }
+    } catch {
+      customToast.info("请在桌面版（Tauri）中使用此功能");
     }
   };
 
