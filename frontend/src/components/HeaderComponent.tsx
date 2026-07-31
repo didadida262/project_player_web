@@ -3,6 +3,7 @@ import { useState } from "react";
 import { HiInformationCircle } from "react-icons/hi";
 import { useResources } from "../provider/resource-context";
 import SelectDir from "./SelectDir";
+import logoIsshin from "../../assets/logo_isshin_agent.png";
 
 export default function HeaderComponent() {
   const { currentpath } = useResources();
@@ -13,14 +14,27 @@ export default function HeaderComponent() {
       <div className="absolute inset-0 bg-gray-800"></div>
 
       <div className="relative z-10 flex items-center px-common h-full">
-        <div className="flex items-center gap-2">
-          <motion.span
-            className="text-[35px] font-bold text-white"
+        <div className="flex items-center gap-3">
+          <motion.div
+            className="h-[68px] w-[68px] rounded-xl overflow-hidden border border-cyan-400/40 bg-black/60 shadow-[0_0_12px_rgba(34,211,238,0.25)]"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
-            Isshin Player
+            <img
+              src={logoIsshin}
+              alt="Isshin Player"
+              className="h-full w-full object-cover select-none"
+              draggable={false}
+            />
+          </motion.div>
+          <motion.span
+            className="text-[22px] font-semibold text-white/90 tracking-[0.2em] uppercase"
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            Player
           </motion.span>
           <motion.div
             className="w-2 h-2 bg-cyan-400 rounded-full"
@@ -32,19 +46,6 @@ export default function HeaderComponent() {
               duration: 2,
               repeat: Infinity,
               ease: "easeInOut",
-            }}
-          />
-          <motion.div
-            className="w-1 h-1 bg-purple-400 rounded-full"
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.3, 0.8, 0.3],
-            }}
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 0.5,
             }}
           />
         </div>
@@ -64,24 +65,22 @@ export default function HeaderComponent() {
               <HiInformationCircle className="w-6 h-6" />
             </button>
             {showInfo && (
-              <div
-                className="absolute top-[calc(100%+6px)] right-[calc(100%+8px)] w-[360px] bg-black/85 border border-white/20 rounded shadow-xl p-3 text-[13px] text-white font-mono backdrop-blur-md space-y-2"
-              >
-              <div>
-                <div className="text-cyan-400 mb-1">当前路径</div>
-                <div className="truncate text-gray-200">
-                  {currentpath || "未选择路径"}
+              <div className="absolute top-[calc(100%+6px)] right-[calc(100%+8px)] w-[360px] bg-black/85 border border-white/20 rounded shadow-xl p-3 text-[13px] text-white font-mono backdrop-blur-md space-y-2">
+                <div>
+                  <div className="text-cyan-400 mb-1">当前路径</div>
+                  <div className="truncate text-gray-200">
+                    {currentpath || "未选择路径"}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <div className="text-cyan-400 mb-1">快捷键</div>
-                <ul className="space-y-1 text-gray-200">
-                  <li>空格：播放 / 暂停</li>
-                  <li>PageDown / ↓ ：下一首</li>
-                  <li>PageUp / ↑ ：上一首</li>
-                  <li>M ：切换播放模式</li>
-                </ul>
-              </div>
+                <div>
+                  <div className="text-cyan-400 mb-1">快捷键</div>
+                  <ul className="space-y-1 text-gray-200">
+                    <li>空格：播放 / 暂停</li>
+                    <li>PageDown / ↓ ：下一首</li>
+                    <li>PageUp / ↑ ：上一首</li>
+                    <li>M ：切换播放模式</li>
+                  </ul>
+                </div>
               </div>
             )}
           </div>
