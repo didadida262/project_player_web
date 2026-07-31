@@ -15,7 +15,9 @@ pub struct RevealResult {
 }
 
 #[tauri::command]
-fn pick_directory(app: tauri::AppHandle) -> Option<String> {
+async fn pick_directory(app: tauri::AppHandle) -> Option<String> {
+    // async command runs off the main thread; blocking_pick_folder is safe here.
+    // Sync commands deadlock the event loop when the native dialog opens.
     app.dialog()
         .file()
         .set_title("选择文件夹")
