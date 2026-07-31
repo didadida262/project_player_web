@@ -11,7 +11,7 @@ $desktopPath = [Environment]::GetFolderPath("Desktop")
 $shortcutPath = Join-Path $desktopPath "Isshin Player.lnk"
 
 if (-Not $exePath) {
-    Write-Host "错误: 找不到 exe 文件。请先运行 'yarn dist:win' 构建应用程序。" -ForegroundColor Red
+    Write-Host "错误: 找不到 exe 文件。请先运行 'yarn desktop:build:win' 构建应用程序。" -ForegroundColor Red
     Write-Host "预期路径: src-tauri\target\release\isshin-player.exe" -ForegroundColor Yellow
     Read-Host "按回车键退出"
     exit 1

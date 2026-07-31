@@ -5,12 +5,14 @@
   "description": "A multi-modal streaming player for local resources",
   "author": "Isshin Player Team",
   "scripts": {
-    "dev": "tauri dev",
+    "dev": "yarn --cwd frontend dev",
     "build": "yarn --cwd frontend build",
+    "preview": "yarn --cwd frontend preview",
     "tauri": "tauri",
-    "dist": "tauri build",
-    "dist:mac": "tauri build --bundles dmg,app",
-    "dist:win": "tauri build --bundles nsis,msi"
+    "desktop:dev": "tauri dev",
+    "desktop:build:mac": "node scripts/sync-app-version.mjs && node scripts/ensure-desktop-platform.mjs mac && cargo build --manifest-path src-tauri/Cargo.toml && node scripts/verify-tauri-acl.mjs && tauri build --bundles app,dmg && node scripts/print-desktop-artifacts.mjs mac",
+    "desktop:build:mac:intel": "node scripts/sync-app-version.mjs && node scripts/ensure-desktop-platform.mjs mac && cargo build --manifest-path src-tauri/Cargo.toml && node scripts/verify-tauri-acl.mjs && tauri build --target x86_64-apple-darwin --bundles app,dmg && node scripts/print-desktop-artifacts.mjs mac-intel",
+    "desktop:build:win": "node scripts/sync-app-version.mjs && node scripts/ensure-desktop-platform.mjs win && cargo build --manifest-path src-tauri/Cargo.toml && node scripts/verify-tauri-acl.mjs && tauri build --bundles nsis,msi && node scripts/print-desktop-artifacts.mjs win"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"

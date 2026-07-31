@@ -12,4 +12,4 @@ echo "Installing root (Tauri CLI) dependencies..."
 cd "$PROJECT_ROOT"
 yarn install
 
-echo "Done. Run: yarn dev"
+echo "Done. Run: yarn desktop:dev"

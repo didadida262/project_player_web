@@ -56,18 +56,19 @@ API 路由（与旧 Node 版兼容）：
 sh install-deps.sh
 
 # 开发：Vite :5173 + Tauri 窗口 + API :3001
-yarn dev
+yarn desktop:dev
 ```
 
 ## 常用命令
 
 | 命令 | 说明 |
 |------|------|
-| `yarn dev` | 开发模式 |
+| `yarn desktop:dev` | 桌面开发模式（Tauri + Vite） |
+| `yarn dev` | 仅启动前端 Vite |
 | `yarn build` | 仅构建前端到 `frontend/dist` |
-| `yarn dist` | 打包当前平台桌面应用 |
-| `yarn dist:mac` | macOS：`.app` / `.dmg` |
-| `yarn dist:win` | Windows：NSIS / MSI |
+| `yarn desktop:build:mac` | macOS：`.app` / `.dmg`（Apple Silicon） |
+| `yarn desktop:build:mac:intel` | macOS：`.app` / `.dmg`（Intel） |
+| `yarn desktop:build:win` | Windows：NSIS / MSI（需在 Windows 上构建） |
 
 产物目录：`src-tauri/target/release/bundle/`
 
