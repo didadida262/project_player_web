@@ -5,9 +5,11 @@ export default function MainLayout() {
   return (
     <div className="h-screen w-screen text-white">
       <div className="w-full h-full flex flex-col justify-between items-center">
-        <HeaderComponent />
-        <div className="w-full h-[calc(100%-80px)] flex justify-between items-center">
-          <Outlet /> {/* 子路由内容会渲染在这里 */}
+        <div className="app-header w-full shrink-0">
+          <HeaderComponent />
+        </div>
+        <div className="app-shell-main w-full h-[calc(100%-3.5rem)] flex justify-between items-center">
+          <Outlet />
         </div>
       </div>
     </div>

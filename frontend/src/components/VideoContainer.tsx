@@ -16,7 +16,53 @@ import {
   HiOutlinePlay,
   HiOutlineFolderOpen,
 } from "react-icons/hi";
+import { MdFullscreen } from "react-icons/md";
 import customToast from "./customToast";
+
+async function getTauriWindow() {
+  try {
+    const { getCurrentWindow } = await import("@tauri-apps/api/window");
+    return getCurrentWindow();
+  } catch {
+    return null;
+  }
+}
+
+/** 尝试系统级窗口全屏；失败时至少 maximize，保证画面尽量占满屏 */
+async function setOsFullscreen(on: boolean) {
+  const win = await getTauriWindow();
+  if (!win) return false;
+
+  try {
+    if (on) {
+      // macOS 上 simple fullscreen / 标准 fullscreen 兼容性不一，两个都试
+      try {
+        await (win as any).setSimpleFullscreen?.(true);
+      } catch {
+        // optional
+      }
+      await win.setFullscreen(true);
+    } else {
+      try {
+        await (win as any).setSimpleFullscreen?.(false);
+      } catch {
+        // optional
+      }
+      await win.setFullscreen(false);
+    }
+    return true;
+  } catch (err) {
+    console.error("setFullscreen failed:", err);
+    try {
+      if (on) await win.maximize();
+      else await win.unmaximize();
+      return true;
+    } catch (err2) {
+      console.error("maximize fallback failed:", err2);
+      return false;
+    }
+  }
+}
 
 /**
  * Blink：首帧自动播放时原生阴影控件常用过时的盒宽排版，控制条会「变短」；
@@ -58,8 +104,25 @@ export default function VideoContainer() {
   /** 当前文件的真实宽高比；换源前为 null，避免沿用旧比例导致框比画面宽、原生控制条与画面不齐 */
   const [videoRatio, setVideoRatio] = useState<number | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const hlsRef = useRef<Hls | null>(null);
   const flvPlayerRef = useRef<flvjs.Player | null>(null);
+
+  const handleToggleFullscreen = async () => {
+    const video = videoRef.current;
+    const wasPlaying = !!video && !video.paused;
+    const next = !isFullscreen;
+    setIsFullscreen(next);
+    document.documentElement.classList.toggle("player-fs", next);
+    await setOsFullscreen(next);
+    // 布局变化后恢复播放（不移动 video 节点，避免断流）
+    requestAnimationFrame(() => {
+      nudgeNativeMediaControlsLayout(video);
+      if (wasPlaying && video) {
+        video.play().catch(() => {});
+      }
+    });
+  };
 
   const handlePlayMode = () => {
     const next =
@@ -236,6 +299,43 @@ export default function VideoContainer() {
     selectFile(currentFile);
   }, [currentFile]);
 
+  // 全屏时用视口尺寸排版视频；退出时恢复容器测量
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const update = () => {
+      setContainerSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [isFullscreen]);
+
+  // Esc 退出应用内全屏
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setIsFullscreen(false);
+        document.documentElement.classList.remove("player-fs");
+        void setOsFullscreen(false);
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [isFullscreen]);
+
+  // 组件卸载时清理全屏
+  useEffect(() => {
+    return () => {
+      document.documentElement.classList.remove("player-fs");
+      void setOsFullscreen(false);
+    };
+  }, []);
+
   // 添加键盘快捷键监听
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -250,14 +350,6 @@ export default function VideoContainer() {
 
       const video = videoRef.current;
       if (!video) return;
-
-      // 检查是否在全屏模式下
-      const isFullscreen = !!(
-        document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).mozFullScreenElement ||
-        (document as any).msFullscreenElement
-      );
 
       // 左右方向键：快进/后退（支持全屏模式）
       if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
@@ -305,6 +397,13 @@ export default function VideoContainer() {
         return;
       }
 
+      // 全屏：F/f
+      if (event.key === "f" || event.key === "F") {
+        event.preventDefault();
+        void handleToggleFullscreen();
+        return;
+      }
+
       // 下一首：PageDown / ArrowDown
       if (event.key === "PageDown" || event.key === "ArrowDown") {
         event.preventDefault(); // 阻止默认行为
@@ -324,7 +423,7 @@ export default function VideoContainer() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown, true);
     };
-  }, [currentFile, palyerMode, sourcelist, prevStack]); // 依赖最新状态，确保快捷键读取最新逻辑
+  }, [currentFile, palyerMode, sourcelist, prevStack, isFullscreen]); // 依赖最新状态，确保快捷键读取最新逻辑
 
   const displayFileName = currentFile.name
     ? currentFile.name.replace(/\.[^/.]+$/, "")
@@ -470,14 +569,22 @@ export default function VideoContainer() {
     };
   };
 
-  const videoStyle: CSSProperties = calculateVideoSize();
+  const videoStyle: CSSProperties = isFullscreen
+    ? {
+        width: "100%",
+        height: "100%",
+        maxWidth: "100%",
+        maxHeight: "100%",
+        objectFit: "contain",
+        display: "block",
+        backgroundColor: "#000",
+      }
+    : calculateVideoSize();
 
   return (
-    <div className="w-full h-full min-w-0 flex flex-col">
-      {/* 文件名显示区域 - 移到视频上方 */}
+    <div className="w-full h-full min-w-0 flex flex-col bg-black">
       {currentFile.name && (
-        <div className="w-full px-4 py-2 flex items-center gap-2 min-w-0">
-          {/* flex-1 放在外层：只占位布局；title 放在内层 shrink-to-fit，避免整行空白也触发 tooltip */}
+        <div className="video-fs-title w-full px-4 py-2 flex items-center gap-2 min-w-0">
           <div className="min-w-0 flex-1 overflow-hidden flex items-center justify-start">
             <span
               className="inline-block max-w-full truncate text-left text-[16px] font-semibold bg-gradient-to-r from-cyan-300 via-white to-purple-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(56,189,248,0.7)]"
@@ -509,10 +616,14 @@ export default function VideoContainer() {
           className="outline-none focus:outline-none focus:ring-0 focus:border-0"
           autoPlay
           controls
+          playsInline
           style={videoStyle}
-          onEnded={handleNext} // 直接监听结束事件
+          onEnded={handleNext}
+          onDoubleClick={(e) => {
+            e.preventDefault();
+            void handleToggleFullscreen();
+          }}
           onKeyDown={(e) => {
-            // 阻止视频元素的原生空格键行为
             if (e.code === "Space" || e.key === " ") {
               e.preventDefault();
               e.stopPropagation();
@@ -520,7 +631,7 @@ export default function VideoContainer() {
           }}
         />
       </div>
-      <div className="operation w-full h-[50px] flex justify-start items-center gap-x-[10px]">
+      <div className="video-fs-ops operation w-full h-[50px] flex justify-start items-center gap-x-[10px]">
         <button
           type="button"
           onClick={handlePlayMode}
@@ -528,10 +639,10 @@ export default function VideoContainer() {
           style={{
             backgroundColor:
               palyerMode === "order"
-                ? "#3b82f6" // 蓝
+                ? "#3b82f6"
                 : palyerMode === "random"
-                ? "#f59e0b" // 橙
-                : "#8b5cf6", // 紫 单曲循环
+                ? "#f59e0b"
+                : "#8b5cf6",
             "--hover-color":
               palyerMode === "order"
                 ? "#2563eb"
@@ -565,7 +676,7 @@ export default function VideoContainer() {
           onClick={handleNext}
           className="px-4 py-2 text-[15px] h-9 rounded text-white hover:opacity-90 transition-[background-color,opacity] flex items-center gap-2 justify-center focus:outline-none"
           style={{
-            backgroundColor: "#10b981", // 绿色
+            backgroundColor: "#10b981",
             "--hover-color": "#059669",
           } as React.CSSProperties}
           onMouseEnter={(e) => {
@@ -577,6 +688,26 @@ export default function VideoContainer() {
         >
           <HiOutlinePlay size={18} />
           下一个
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void handleToggleFullscreen()}
+          className="px-4 py-2 text-[15px] h-9 rounded text-white hover:opacity-90 transition-[background-color,opacity] flex items-center gap-2 justify-center focus:outline-none"
+          style={{
+            backgroundColor: "#0ea5e9",
+            "--hover-color": "#0284c7",
+          } as React.CSSProperties}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#0284c7";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#0ea5e9";
+          }}
+          title="全屏播放（快捷键 F，Esc 退出）"
+        >
+          <MdFullscreen size={18} />
+          {isFullscreen ? "退出全屏" : "全屏"}
         </button>
       </div>
     </div>

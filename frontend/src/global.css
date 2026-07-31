@@ -144,3 +144,43 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* 全屏播放：隐藏壳层，视频节点不移动（避免 Portal 导致断流） */
+html.player-fs,
+html.player-fs body {
+  overflow: hidden !important;
+}
+html.player-fs .app-header,
+html.player-fs .player-chrome-side,
+html.player-fs .player-chrome-rail {
+  display: none !important;
+}
+html.player-fs .app-shell-main {
+  height: 100% !important;
+}
+html.player-fs .player-page {
+  height: 100% !important;
+  padding: 0 !important;
+}
+html.player-fs .player-page .content {
+  height: 100% !important;
+  padding: 0 !important;
+}
+html.player-fs .player-stage {
+  border: none !important;
+  border-radius: 0 !important;
+  background: #000 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html.player-fs .player-stage > div {
+  padding: 0 !important;
+  height: 100% !important;
+}
+html.player-fs .video-fs-ops {
+  display: none !important;
+}
+html.player-fs .video-fs-title {
+  display: none !important;
+}
+

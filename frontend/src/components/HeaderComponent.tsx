@@ -10,13 +10,13 @@ export default function HeaderComponent() {
   const [showInfo, setShowInfo] = useState(false);
 
   return (
-    <div className="relative w-full h-[80px] overflow-visible">
+    <div className="relative w-full h-14 overflow-visible">
       <div className="absolute inset-0 bg-gray-800"></div>
 
       <div className="relative z-10 flex items-center px-common h-full">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <motion.div
-            className="h-[68px] w-[68px] rounded-xl overflow-hidden border border-cyan-400/40 bg-black/60 shadow-[0_0_12px_rgba(34,211,238,0.25)]"
+            className="h-9 w-9 shrink-0 rounded-lg overflow-hidden border border-cyan-400/40 bg-black/60 shadow-[0_0_8px_rgba(34,211,238,0.2)]"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -29,7 +29,7 @@ export default function HeaderComponent() {
             />
           </motion.div>
           <motion.span
-            className="text-[22px] font-semibold text-white/90 tracking-[0.2em] uppercase"
+            className="text-[18px] font-semibold text-white/90 tracking-[0.18em] uppercase"
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
@@ -79,6 +79,8 @@ export default function HeaderComponent() {
                     <li>PageDown / ↓ ：下一首</li>
                     <li>PageUp / ↑ ：上一首</li>
                     <li>M ：切换播放模式</li>
+                    <li>F ：全屏 / 退出全屏</li>
+                    <li>双击视频：全屏</li>
                   </ul>
                 </div>
               </div>

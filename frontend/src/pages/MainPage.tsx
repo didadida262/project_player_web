@@ -24,7 +24,7 @@ export default function MainPage(props: IProps) {
   }, [registerExpandLeftSidebar]);
 
   return (
-    <div className="flex justify-between flex-col items-center w-full h-full text-[white] px-[5px]">
+    <div className="player-page flex justify-between flex-col items-center w-full h-full text-[white] px-[5px]">
       <div className="content w-full h-[calc(100%_-_16px)] px-0 py-[5px] flex items-stretch gap-0">
         {/* 左侧文件夹容器 */}
         <AnimatePresence>
@@ -34,7 +34,7 @@ export default function MainPage(props: IProps) {
               animate={{ width: 280, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="h-full markBorderT backdrop-blur-sm bg-black/20 overflow-hidden"
+              className="player-chrome-side h-full markBorderT backdrop-blur-sm bg-black/20 overflow-hidden"
             >
               <CategoryContainer />
             </motion.div>
@@ -42,8 +42,8 @@ export default function MainPage(props: IProps) {
         </AnimatePresence>
 
         {/* 收起/展开按钮 */}
-        <div 
-          className="w-[20px] h-full flex items-center justify-center cursor-pointer hover:bg-[#383b45] transition-colors"
+        <div
+          className="player-chrome-rail w-[20px] h-full flex items-center justify-center cursor-pointer hover:bg-[#383b45] transition-colors"
           onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
         >
           <motion.div
@@ -55,7 +55,7 @@ export default function MainPage(props: IProps) {
         </div>
 
         {/* 中间视频区 */}
-        <div className="flex-1 h-full flex flex-col justify-between items-center markBorderT backdrop-blur-sm bg-black/20 min-w-0">
+        <div className="player-stage flex-1 h-full flex flex-col justify-between items-center markBorderT backdrop-blur-sm bg-black/20 min-w-0">
           <div className="w-full min-w-0 px-[8px] py-[8px] flex-1">
             {currentFile.type && isVideoFile(currentFile.type) && (
               <VideoContainer />
@@ -76,8 +76,8 @@ export default function MainPage(props: IProps) {
         </div>
 
         {/* 右侧显示/隐藏控制 */}
-        <div 
-          className="w-[20px] h-full flex items-center justify-center cursor-pointer hover:bg-[#383b45] transition-colors"
+        <div
+          className="player-chrome-rail w-[20px] h-full flex items-center justify-center cursor-pointer hover:bg-[#383b45] transition-colors"
           onClick={() => setIsRightCollapsed(!isRightCollapsed)}
         >
           <motion.div
@@ -96,7 +96,7 @@ export default function MainPage(props: IProps) {
             animate={{ width: 230, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="h-full markBorderT backdrop-blur-sm bg-black/10 overflow-hidden pl-[6px] pr-0 py-[5px]"
+            className="player-chrome-side h-full markBorderT backdrop-blur-sm bg-black/10 overflow-hidden pl-[6px] pr-0 py-[5px]"
           >
               <FileList />
             </motion.div>
