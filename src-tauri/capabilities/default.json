@@ -5,7 +5,10 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "dialog:default",
     "opener:default",
-    "opener:allow-reveal-item-in-dir"
+    "opener:allow-reveal-item-in-dir",
+    "allow-pick-directory",
+    "allow-show-item-in-folder"
   ]
 }

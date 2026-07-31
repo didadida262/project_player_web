@@ -4,6 +4,7 @@ mod server;
 use std::path::PathBuf;
 
 use serde::Serialize;
+use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 
 #[derive(Serialize)]
@@ -11,6 +12,15 @@ pub struct RevealResult {
     ok: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<String>,
+}
+
+#[tauri::command]
+fn pick_directory(app: tauri::AppHandle) -> Option<String> {
+    app.dialog()
+        .file()
+        .set_title("选择文件夹")
+        .blocking_pick_folder()
+        .map(|path| path.to_string())
 }
 
 #[tauri::command]
@@ -61,6 +71,7 @@ pub fn run() {
         .unwrap_or_else(|_| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(move |_app| {
             let default_path = default_path.clone();
@@ -71,7 +82,7 @@ pub fn run() {
             });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![show_item_in_folder])
+        .invoke_handler(tauri::generate_handler![pick_directory, show_item_in_folder])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

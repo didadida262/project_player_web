@@ -1,14 +1,12 @@
-import { useState, useRef } from "react";
-import api from "../api/index";
+import { useState } from "react";
 import { useResources } from "../provider/resource-context";
 import { getFiles } from "@/api/common";
-import { PathInputDialog } from "./ui/path-input-dialog";
+import customToast from "./customToast";
 
 interface IProps {}
 
-export default function SelectDir(props: IProps) {
+export default function SelectDir(_props: IProps) {
   const {
-    currentpath,
     setCurrentpath,
     setCategories,
     requestExpandLeftSidebar,
@@ -20,35 +18,6 @@ export default function SelectDir(props: IProps) {
     setcurrentfileurl,
   } = useResources();
   const [isScanning, setIsScanning] = useState(false);
-  const [showPathDialog, setShowPathDialog] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleSelectDirectory = async () => {
-    // 显示路径输入对话框
-    setShowPathDialog(true);
-  };
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      // 获取第一个文件的完整路径
-      const file = files[0];
-      // 使用 File API 获取文件的完整路径
-      const fullPath = (file as any).path || file.webkitRelativePath || file.name;
-      
-      // 提取目录部分（去掉文件名）
-      let directoryPath = fullPath;
-      if (fullPath.includes('/')) {
-        directoryPath = fullPath.substring(0, fullPath.lastIndexOf('/'));
-      } else if (fullPath.includes('\\')) {
-        directoryPath = fullPath.substring(0, fullPath.lastIndexOf('\\'));
-      }
-      
-      setCurrentpath(directoryPath);
-    }
-    // 清空input值，允许重复选择同一个文件夹
-    event.target.value = '';
-  };
 
   const handlePathConfirm = async (path: string) => {
     setCurrentpath(path);
@@ -57,61 +26,64 @@ export default function SelectDir(props: IProps) {
     setCurrentCate({});
     setSourcelist([]);
     setCurrentFile({});
-    setcurrentfileurl('');
+    setcurrentfileurl("");
 
-    // 自动开始扫描
     setIsScanning(true);
     try {
-      const params = { path: path };
+      const params = { path };
       const res = (await getFiles(params)) as any;
       setCategories(res);
       requestExpandLeftSidebar();
     } catch (error) {
       console.error("扫描失败:", error);
+      customToast.error("扫描失败");
     } finally {
       setIsScanning(false);
     }
   };
 
+  const handleSelectDirectory = async () => {
+    if (isScanning) return;
+
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const path = await invoke<string | null>("pick_directory");
+      if (path) {
+        await handlePathConfirm(path);
+      }
+    } catch {
+      customToast.info("请在桌面版（Tauri）中使用此功能");
+    }
+  };
+
   const buttonText = isScanning ? "扫描中..." : "选择路径";
-  const buttonColor = isScanning ? "#6b7280" : "#10b981"; // 灰色表示扫描中，绿色表示选择
+  const buttonColor = isScanning ? "#6b7280" : "#10b981";
   const hoverColor = isScanning ? "#6b7280" : "#059669";
 
   return (
-    <>
-      {/* 路径输入对话框 */}
-      <PathInputDialog
-        isOpen={showPathDialog}
-        onClose={() => setShowPathDialog(false)}
-        onConfirm={handlePathConfirm}
-        title="选择文件夹路径"
-        placeholder="请输入文件夹路径..."
-      />
-      
-      {/* 按钮 */}
-      <button
-        type="button"
-        onClick={handleSelectDirectory}
-        disabled={isScanning}
-        className="select-none px-4 py-2 text-[18px] h-8 rounded-none text-white hover:opacity-90 transition-[background-color,opacity] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
-        style={{ 
+    <button
+      type="button"
+      onClick={handleSelectDirectory}
+      disabled={isScanning}
+      className="select-none px-4 py-2 text-[18px] h-8 rounded-none text-white hover:opacity-90 transition-[background-color,opacity] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+      style={
+        {
           backgroundColor: buttonColor,
-          '--hover-color': hoverColor
-        } as React.CSSProperties}
-        onMouseEnter={(e) => {
-          if (!isScanning) {
-            e.currentTarget.style.backgroundColor = hoverColor;
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isScanning) {
-            e.currentTarget.style.backgroundColor = buttonColor;
-          }
-        }}
-      >
-        {buttonText}
-      </button>
-
-    </>
+          "--hover-color": hoverColor,
+        } as React.CSSProperties
+      }
+      onMouseEnter={(e) => {
+        if (!isScanning) {
+          e.currentTarget.style.backgroundColor = hoverColor;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isScanning) {
+          e.currentTarget.style.backgroundColor = buttonColor;
+        }
+      }}
+    >
+      {buttonText}
+    </button>
   );
 }

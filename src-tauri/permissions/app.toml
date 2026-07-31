@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-pick-directory"
+description = "Allows selecting a local directory via the native folder picker."
+commands.allow = ["pick_directory"]
+
+[[permission]]
+identifier = "allow-show-item-in-folder"
+description = "Allows revealing a file in the system file manager."
+commands.allow = ["show_item_in_folder"]
