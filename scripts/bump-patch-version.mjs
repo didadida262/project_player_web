@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * 递增 package.json 的 patch 版本（x.y.Z → x.y.Z+1），并同步到 Tauri / Cargo。
+ * 由 desktop:build:* 在打包前调用。
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";

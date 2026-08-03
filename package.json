@@ -10,9 +10,9 @@
     "preview": "yarn --cwd frontend preview",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
-    "desktop:build:mac": "node scripts/sync-app-version.mjs && node scripts/ensure-desktop-platform.mjs mac && cargo build --manifest-path src-tauri/Cargo.toml && node scripts/verify-tauri-acl.mjs && tauri build --bundles app,dmg && node scripts/print-desktop-artifacts.mjs mac",
-    "desktop:build:mac:intel": "node scripts/sync-app-version.mjs && node scripts/ensure-desktop-platform.mjs mac && cargo build --manifest-path src-tauri/Cargo.toml && node scripts/verify-tauri-acl.mjs && tauri build --target x86_64-apple-darwin --bundles app,dmg && node scripts/print-desktop-artifacts.mjs mac-intel",
-    "desktop:build:win": "node scripts/sync-app-version.mjs && node scripts/ensure-desktop-platform.mjs win && cargo build --manifest-path src-tauri/Cargo.toml && node scripts/verify-tauri-acl.mjs && tauri build --bundles nsis,msi && node scripts/print-desktop-artifacts.mjs win"
+    "desktop:build:mac": "node scripts/bump-patch-version.mjs && node scripts/ensure-desktop-platform.mjs mac && cargo build --manifest-path src-tauri/Cargo.toml && node scripts/verify-tauri-acl.mjs && tauri build --bundles app,dmg && node scripts/print-desktop-artifacts.mjs mac",
+    "desktop:build:mac:intel": "node scripts/bump-patch-version.mjs && node scripts/ensure-desktop-platform.mjs mac && cargo build --manifest-path src-tauri/Cargo.toml && node scripts/verify-tauri-acl.mjs && tauri build --target x86_64-apple-darwin --bundles app,dmg && node scripts/print-desktop-artifacts.mjs mac-intel",
+    "desktop:build:win": "node scripts/bump-patch-version.mjs && node scripts/ensure-desktop-platform.mjs win && cargo build --manifest-path src-tauri/Cargo.toml && node scripts/verify-tauri-acl.mjs && tauri build --bundles nsis,msi && node scripts/print-desktop-artifacts.mjs win"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"
