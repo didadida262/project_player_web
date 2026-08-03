@@ -105,21 +105,40 @@ export default function VideoContainer() {
   const [videoRatio, setVideoRatio] = useState<number | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const isFullscreenRef = useRef(false);
   const hlsRef = useRef<Hls | null>(null);
   const flvPlayerRef = useRef<flvjs.Player | null>(null);
+
+  isFullscreenRef.current = isFullscreen;
+
+  /** 全屏后壳层被 display:none，焦点常留在隐藏搜索框/按钮或原生 video 上，导致快捷键失效 */
+  const reclaimKeyboardFocus = () => {
+    const active = document.activeElement as HTMLElement | null;
+    if (active && active !== document.body && typeof active.blur === "function") {
+      active.blur();
+    }
+    videoRef.current?.blur();
+    containerRef.current?.focus({ preventScroll: true });
+  };
 
   const handleToggleFullscreen = async () => {
     const video = videoRef.current;
     const wasPlaying = !!video && !video.paused;
-    const next = !isFullscreen;
+    const next = !isFullscreenRef.current;
     setIsFullscreen(next);
+    isFullscreenRef.current = next;
     document.documentElement.classList.toggle("player-fs", next);
     await setOsFullscreen(next);
-    // 布局变化后恢复播放（不移动 video 节点，避免断流）
+    // 布局变化后恢复播放（不移动 video 节点，避免断流），并夺回键盘焦点
     requestAnimationFrame(() => {
       nudgeNativeMediaControlsLayout(video);
+      const finish = () => {
+        if (next) reclaimKeyboardFocus();
+      };
       if (wasPlaying && video) {
-        video.play().catch(() => {});
+        video.play().then(finish).catch(finish);
+      } else {
+        finish();
       }
     });
   };
@@ -313,21 +332,6 @@ export default function VideoContainer() {
     return () => window.removeEventListener("resize", update);
   }, [isFullscreen]);
 
-  // Esc 退出应用内全屏
-  useEffect(() => {
-    if (!isFullscreen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setIsFullscreen(false);
-        document.documentElement.classList.remove("player-fs");
-        void setOsFullscreen(false);
-      }
-    };
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  }, [isFullscreen]);
-
   // 组件卸载时清理全屏
   useEffect(() => {
     return () => {
@@ -338,42 +342,66 @@ export default function VideoContainer() {
 
   // 添加键盘快捷键监听
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // 避免在输入框等控件里触发快捷键
-      const target = event.target as HTMLElement | null;
-      const tag = target?.tagName?.toLowerCase();
-      const isFormInput =
+    const isEditable = (el: HTMLElement | null) => {
+      if (!el) return false;
+      const tag = el.tagName?.toLowerCase();
+      return (
         tag === "input" ||
         tag === "textarea" ||
-        target?.getAttribute("contenteditable") === "true";
-      if (isFormInput) return;
+        el.getAttribute("contenteditable") === "true"
+      );
+    };
+    const isVisible = (el: HTMLElement | null) => {
+      if (!el) return false;
+      return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement | null;
+      // 焦点落在被全屏 CSS 隐藏的输入框时，先夺回焦点再处理快捷键
+      if (isEditable(active) && !isVisible(active)) {
+        active?.blur();
+        containerRef.current?.focus({ preventScroll: true });
+      } else if (isEditable(active) || isEditable(event.target as HTMLElement | null)) {
+        // 真正在可见输入框里打字时不抢快捷键
+        return;
+      }
 
       const video = videoRef.current;
       if (!video) return;
 
-      // 左右方向键：快进/后退（支持全屏模式）
-      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-        // 如果不在全屏模式，且事件目标是 video 元素，允许视频的原生行为
-        if (!isFullscreen && tag === "video") {
-          return; // 让视频元素处理左右键（前进/后退）
-        }
-        
-        // 在全屏模式下，或者事件目标不是 video 元素时，手动处理快进后退
+      const fullscreen = isFullscreenRef.current;
+      const tag = (event.target as HTMLElement | null)?.tagName?.toLowerCase();
+
+      // Esc 退出应用内全屏
+      if (fullscreen && event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
-        
-        const seekStep = 10; // 快进/后退的秒数
+        setIsFullscreen(false);
+        isFullscreenRef.current = false;
+        document.documentElement.classList.remove("player-fs");
+        void setOsFullscreen(false);
+        return;
+      }
+
+      // 左右方向键：快进/后退（支持全屏模式）
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        // 非全屏且焦点在 video 上时，交给原生控件；全屏下原生控件易吞键，改为手动处理
+        if (!fullscreen && tag === "video") {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const seekStep = 10;
         const currentTime = video.currentTime;
         const duration = video.duration;
-        
+
         if (event.key === "ArrowLeft") {
-          // 后退
-          const newTime = Math.max(0, currentTime - seekStep);
-          video.currentTime = newTime;
-        } else if (event.key === "ArrowRight") {
-          // 快进
-          const newTime = Math.min(duration, currentTime + seekStep);
-          video.currentTime = newTime;
+          video.currentTime = Math.max(0, currentTime - seekStep);
+        } else {
+          video.currentTime = Math.min(duration, currentTime + seekStep);
         }
         return;
       }
@@ -381,7 +409,7 @@ export default function VideoContainer() {
       // 空格：播放/暂停
       if (event.code === "Space" || event.key === " ") {
         event.preventDefault();
-        event.stopPropagation(); // 阻止事件冒泡，防止视频元素的原生行为
+        event.stopPropagation();
         if (video.paused) {
           video.play().catch(console.error);
         } else {
@@ -406,24 +434,26 @@ export default function VideoContainer() {
 
       // 下一首：PageDown / ArrowDown
       if (event.key === "PageDown" || event.key === "ArrowDown") {
-        event.preventDefault(); // 阻止默认行为
+        event.preventDefault();
+        event.stopPropagation();
         handleNext();
+        return;
       }
       // 上一首：PageUp / ArrowUp
       if (event.key === "PageUp" || event.key === "ArrowUp") {
         event.preventDefault();
+        event.stopPropagation();
         handlePrev();
       }
     };
 
-    // 添加键盘事件监听器，使用 capture 阶段捕获事件，确保在视频元素处理之前拦截
-    document.addEventListener('keydown', handleKeyDown, true);
+    // 用 window + capture，避免全屏后焦点落在 video/隐藏节点时 document 监听不稳定
+    window.addEventListener("keydown", handleKeyDown, true);
 
-    // 清理函数：组件卸载时移除事件监听器
     return () => {
-      document.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [currentFile, palyerMode, sourcelist, prevStack, isFullscreen]); // 依赖最新状态，确保快捷键读取最新逻辑
+  }, [currentFile, palyerMode, sourcelist, prevStack]);
 
   const displayFileName = currentFile.name
     ? currentFile.name.replace(/\.[^/.]+$/, "")
@@ -607,7 +637,8 @@ export default function VideoContainer() {
       )}
       <div
         ref={containerRef}
-        className="video native-video-host w-full min-h-0 min-w-0 flex-1 selectedG flex justify-center items-center rounded-lg"
+        tabIndex={-1}
+        className="video native-video-host w-full min-h-0 min-w-0 flex-1 selectedG flex justify-center items-center rounded-lg outline-none"
       >
         <video
           ref={videoRef}
