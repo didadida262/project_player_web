@@ -1,0 +1,19 @@
+#!/bin/sh
+# 每次 commit 自动递增 package.json 小版本号，并同步 Tauri / Cargo。
+
+# 跳过 merge commit
+if [ -f "$(git rev-parse --git-path MERGE_HEAD)" ]; then
+  exit 0
+fi
+
+# 跳过 rebase 进行中
+if [ -d "$(git rev-parse --git-path rebase-merge)" ] || [ -d "$(git rev-parse --git-path rebase-apply)" ]; then
+  exit 0
+fi
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT" || exit 1
+
+node scripts/bump-patch-version.mjs || exit 1
+
+git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml

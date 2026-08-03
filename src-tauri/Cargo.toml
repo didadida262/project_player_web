@@ -1,6 +1,6 @@
 [package]
 name = "isshin-player"
-version = "1.0.0"
+version = "1.0.1"
 description = "Isshin Player - local multimodal streaming player"
 authors = ["Isshin Player Team"]
 edition = "2021"
