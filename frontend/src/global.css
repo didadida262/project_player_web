@@ -151,6 +151,7 @@ html.player-fs body {
   overflow: hidden !important;
 }
 html.player-fs .app-header,
+html.player-fs .app-version,
 html.player-fs .player-chrome-side,
 html.player-fs .player-chrome-rail {
   display: none !important;

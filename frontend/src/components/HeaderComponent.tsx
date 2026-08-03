@@ -29,12 +29,12 @@ export default function HeaderComponent() {
             />
           </motion.div>
           <motion.span
-            className="text-[18px] font-semibold text-white/90 tracking-[0.18em] uppercase"
+            className="text-[18px] font-semibold text-white/90 tracking-wide"
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
           >
-            Player
+            Isshin Player
           </motion.span>
           <motion.div
             className="w-2 h-2 bg-cyan-400 rounded-full"
