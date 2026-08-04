@@ -14,9 +14,9 @@ export default function HeaderComponent() {
       <div className="absolute inset-0 bg-gray-800"></div>
 
       <div className="relative z-10 flex items-center px-common h-full">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <motion.div
-            className="h-9 w-9 shrink-0 rounded-lg overflow-hidden border border-cyan-400/40 bg-black/60 shadow-[0_0_8px_rgba(34,211,238,0.2)]"
+            className="h-12 w-12 shrink-0 rounded-[10px] overflow-hidden border border-cyan-400/50 bg-black/70 shadow-[0_0_12px_rgba(34,211,238,0.28)]"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -24,7 +24,7 @@ export default function HeaderComponent() {
             <img
               src={logoIsshin}
               alt="Isshin Player"
-              className="h-full w-full object-cover select-none"
+              className="h-full w-full object-cover scale-[1.08] select-none"
               draggable={false}
             />
           </motion.div>
