@@ -143,6 +143,19 @@ const createExpressApp = (options = {}) => {
       matchByKeyword(file.name, normalizedKeyword),
     );
 
+    // 目录优先，其次按文件名字典序（不区分大小写）排序后返回前端
+    filteredFiles.sort((a, b) => {
+      const aIsDir = isDirectory(a.type);
+      const bIsDir = isDirectory(b.type);
+      if (aIsDir !== bIsDir) {
+        return aIsDir ? -1 : 1;
+      }
+      return a.name.localeCompare(b.name, undefined, {
+        sensitivity: "base",
+        numeric: true,
+      });
+    });
+
     res.json(filteredFiles);
   });
 

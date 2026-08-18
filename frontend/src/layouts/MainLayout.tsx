@@ -8,15 +8,9 @@ export default function MainLayout() {
         <div className="app-header w-full shrink-0">
           <HeaderComponent />
         </div>
-        <div className="app-shell-main w-full h-[calc(100%-3.5rem)] flex justify-between items-center">
+        <div className="app-shell-main w-full h-[calc(100%-72px)] flex justify-between items-center">
           <Outlet />
         </div>
-      </div>
-      <div
-        className="app-version pointer-events-none absolute bottom-1.5 left-2 z-20 text-[11px] font-mono tracking-wide text-white/35 select-none"
-        aria-hidden
-      >
-        v{__APP_VERSION__}
       </div>
     </div>
   );

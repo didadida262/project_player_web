@@ -121,6 +121,17 @@ async fn get_files(
         });
     }
 
+    // 目录优先，其次按文件名自然排序后返回前端
+    files.sort_by(|a, b| {
+        let a_is_dir = a.file_type == DIRECTORY;
+        let b_is_dir = b.file_type == DIRECTORY;
+        match (a_is_dir, b_is_dir) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            _ => natural_name_cmp(&a.name, &b.name),
+        }
+    });
+
     Ok(Json(files))
 }
 
@@ -200,6 +211,52 @@ fn parse_bytes_range(header: &str, file_size: u64) -> Option<(u64, u64)> {
         return None;
     }
     Some((start, end))
+}
+
+/// 按文件名做自然排序：连续数字按数值比较，其余字符按不区分大小写的字典序。
+fn natural_name_cmp(a: &str, b: &str) -> std::cmp::Ordering {
+    let a_chars: Vec<char> = a.chars().collect();
+    let b_chars: Vec<char> = b.chars().collect();
+    let mut i = 0;
+    let mut j = 0;
+
+    while i < a_chars.len() && j < b_chars.len() {
+        let a_is_digit = a_chars[i].is_ascii_digit();
+        let b_is_digit = b_chars[j].is_ascii_digit();
+
+        if a_is_digit && b_is_digit {
+            let mut a_num = 0u64;
+            while i < a_chars.len() && a_chars[i].is_ascii_digit() {
+                a_num = a_num
+                    .saturating_mul(10)
+                    .saturating_add(a_chars[i].to_digit(10).unwrap_or(0) as u64);
+                i += 1;
+            }
+            let mut b_num = 0u64;
+            while j < b_chars.len() && b_chars[j].is_ascii_digit() {
+                b_num = b_num
+                    .saturating_mul(10)
+                    .saturating_add(b_chars[j].to_digit(10).unwrap_or(0) as u64);
+                j += 1;
+            }
+            match a_num.cmp(&b_num) {
+                std::cmp::Ordering::Equal => continue,
+                other => return other,
+            }
+        }
+
+        let a_lower = a_chars[i].to_ascii_lowercase();
+        let b_lower = b_chars[j].to_ascii_lowercase();
+        match a_lower.cmp(&b_lower) {
+            std::cmp::Ordering::Equal => {
+                i += 1;
+                j += 1;
+            }
+            other => return other,
+        }
+    }
+
+    a_chars.len().cmp(&b_chars.len())
 }
 
 pub async fn start_server(port: u16, default_path: PathBuf) -> Result<(), std::io::Error> {

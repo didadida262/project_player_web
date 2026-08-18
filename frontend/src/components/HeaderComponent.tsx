@@ -10,13 +10,13 @@ export default function HeaderComponent() {
   const [showInfo, setShowInfo] = useState(false);
 
   return (
-    <div className="relative w-full h-14 overflow-visible">
+    <div className="relative w-full h-[72px] overflow-visible">
       <div className="absolute inset-0 bg-gray-800"></div>
 
       <div className="relative z-10 flex items-center px-common h-full">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3.5">
           <motion.div
-            className="h-12 w-12 shrink-0 rounded-[10px] overflow-hidden border border-cyan-400/50 bg-black/70 shadow-[0_0_12px_rgba(34,211,238,0.28)]"
+            className="h-14 w-14 shrink-0 rounded-xl overflow-hidden border border-cyan-400/50 bg-black/70 shadow-[0_0_14px_rgba(34,211,238,0.32)]"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -29,7 +29,7 @@ export default function HeaderComponent() {
             />
           </motion.div>
           <motion.span
-            className="text-[18px] font-semibold text-white/90 tracking-wide"
+            className="text-[20px] font-semibold text-white/90 tracking-wide"
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
@@ -48,6 +48,14 @@ export default function HeaderComponent() {
               ease: "easeInOut",
             }}
           />
+          <motion.span
+            className="app-version text-[13px] font-mono tracking-wide text-white/45 select-none"
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+          >
+            v{__APP_VERSION__}
+          </motion.span>
         </div>
 
         <div className="ml-auto flex items-center gap-x-3 relative">
