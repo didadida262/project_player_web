@@ -1,3 +1,4 @@
+mod hls;
 mod media;
 mod mime;
 mod server;

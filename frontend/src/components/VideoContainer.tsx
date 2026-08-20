@@ -52,12 +52,12 @@ async function setOsFullscreen(on: boolean) {
       await win.setFullscreen(false);
     }
     return true;
-  } catch (err) {
+    } catch (err) {
     console.error("setFullscreen failed:", err);
     try {
       if (on) await win.maximize();
-      else await win.unmaximize();
-      return true;
+      // 退出时不要 unmaximize：用户自己拖满/系统最大化的窗口会被打回小窗
+      return on;
     } catch (err2) {
       console.error("maximize fallback failed:", err2);
       return false;
@@ -111,11 +111,12 @@ export default function VideoContainer() {
   const flvPlayerRef = useRef<flvjs.Player | null>(null);
   /** 当前已可播的片源 key；与 mediaKey 不一致时视为加载中，换源当帧就能盖住原生控件 */
   const [readyMediaKey, setReadyMediaKey] = useState<string | null>(null);
+  const [mediaFailed, setMediaFailed] = useState(false);
 
   isFullscreenRef.current = isFullscreen;
 
   const mediaKey = `${currentFile.name || ""}::${currentfileurl || ""}`;
-  const isVideoLoading = Boolean(currentfileurl) && readyMediaKey !== mediaKey;
+  const isVideoLoading = Boolean(currentfileurl) && readyMediaKey !== mediaKey && !mediaFailed;
 
   /** 全屏后壳层被 display:none，焦点常留在隐藏搜索框/按钮或原生 video 上，导致快捷键失效 */
   const reclaimKeyboardFocus = () => {
@@ -230,7 +231,6 @@ export default function VideoContainer() {
                   currentFile.name?.toLowerCase().endsWith('.flv') || 
                   currentfileurl.includes('.flv');
 
-    // 清理之前的实例
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
@@ -240,44 +240,60 @@ export default function VideoContainer() {
       flvPlayerRef.current = null;
     }
 
+    setMediaFailed(false);
+
+    // 只摘掉旧 src，不要 video.load()：空 src 的 load 会异步打出 MEDIA_ERR_SRC_NOT_SUPPORTED，
+    // 和随后的 HLS 接管抢跑，控制条就会随机出现 Error
+    video.pause();
+    video.removeAttribute("src");
+
     if (isM3u8) {
-      // 处理HLS流
-      if (Hls.isSupported()) {
+      const nativeHls =
+        /Apple Computer/.test(navigator.vendor) &&
+        !!video.canPlayType("application/vnd.apple.mpegurl");
+
+      if (nativeHls) {
+        video.src = currentfileurl;
+        video.play().catch(console.error);
+      } else if (Hls.isSupported()) {
         const hls = new Hls({
           enableWorker: true,
-          lowLatencyMode: true,
+          lowLatencyMode: false,
+          backBufferLength: 90,
         });
-        
         hls.loadSource(currentfileurl);
         hls.attachMedia(video);
         hlsRef.current = hls;
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (hlsRef.current !== hls) return;
           video.play().catch(console.error);
         });
 
-        hls.on(Hls.Events.ERROR, (event, data) => {
-          console.error('HLS error:', data);
-          if (data.fatal) {
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                hls.startLoad();
-                break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                hls.recoverMediaError();
-                break;
-              default:
-                hls.destroy();
-                break;
-            }
+        hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (hlsRef.current !== hls) return;
+          console.error("HLS error:", data);
+          if (!data.fatal) return;
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hls.recoverMediaError();
+              break;
+            default:
+              hls.destroy();
+              if (hlsRef.current === hls) hlsRef.current = null;
+              setMediaFailed(true);
+              break;
           }
         });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // Safari原生支持HLS
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = currentfileurl;
         video.play().catch(console.error);
       } else {
-        console.error('HLS is not supported in this browser');
+        console.error("HLS is not supported in this browser");
+        setMediaFailed(true);
       }
     } else if (isFlv) {
       // 处理FLV文件
@@ -338,11 +354,14 @@ export default function VideoContainer() {
     return () => window.removeEventListener("resize", update);
   }, [isFullscreen]);
 
-  // 组件卸载时清理全屏
+  // 仅在「播放器全屏」态卸载时退出系统全屏；切分类导致 VideoContainer 卸载不应动窗口尺寸
   useEffect(() => {
     return () => {
+      const wasPlayerFs = isFullscreenRef.current;
       document.documentElement.classList.remove("player-fs");
-      void setOsFullscreen(false);
+      if (wasPlayerFs) {
+        void setOsFullscreen(false);
+      }
     };
   }, []);
 
@@ -647,24 +666,47 @@ export default function VideoContainer() {
         className="video native-video-host w-full min-h-0 min-w-0 flex-1 selectedG relative flex justify-center items-center rounded-lg outline-none"
       >
         {isVideoLoading && <VideoLoading fileName={displayFileName} />}
+        {mediaFailed && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 rounded-lg bg-black/85 text-cyan-100/80">
+            <span className="text-[14px] tracking-wide">无法播放此资源</span>
+            <span className="max-w-[70%] truncate text-[11px] text-white/40">
+              {displayFileName}
+            </span>
+          </div>
+        )}
         <video
           ref={videoRef}
           muted={false}
           tabIndex={-1}
           className="outline-none focus:outline-none focus:ring-0 focus:border-0"
-          autoPlay
-          controls={!isVideoLoading}
+          autoPlay={
+            !(
+              currentFile.type?.includes("mpegurl") ||
+              currentFile.name?.toLowerCase().endsWith(".m3u8")
+            )
+          }
+          controls={!isVideoLoading && !mediaFailed}
           playsInline
           style={{
             ...videoStyle,
-            opacity: isVideoLoading ? 0 : 1,
-            pointerEvents: isVideoLoading ? "none" : "auto",
+            opacity: isVideoLoading || mediaFailed ? 0 : 1,
+            pointerEvents: isVideoLoading || mediaFailed ? "none" : "auto",
           }}
           onEnded={handleNext}
-          onCanPlay={() => setReadyMediaKey(mediaKey)}
+          onCanPlay={() => {
+            if (!videoRef.current?.error) setReadyMediaKey(mediaKey);
+          }}
           onPlaying={() => setReadyMediaKey(mediaKey)}
-          onLoadedData={() => setReadyMediaKey(mediaKey)}
-          onError={() => setReadyMediaKey(mediaKey)}
+          onLoadedData={() => {
+            if (!videoRef.current?.error) setReadyMediaKey(mediaKey);
+          }}
+          onError={() => {
+            const el = videoRef.current;
+            const code = el?.error?.code;
+            if (!el || !code || code === MediaError.MEDIA_ERR_ABORTED) return;
+            if (!el.currentSrc && !hlsRef.current) return;
+            setMediaFailed(true);
+          }}
           onDoubleClick={(e) => {
             e.preventDefault();
             void handleToggleFullscreen();

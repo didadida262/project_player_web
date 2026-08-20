@@ -2,6 +2,7 @@ import { useResources, CategoryNode } from "../provider/resource-context";
 import cn from "classnames";
 import { getFiles } from "@/api/common";
 import { isDirectory } from "../utils/mimeTypes";
+import { isFlatSubfoldersDir } from "../utils/flatSubfolders";
 import { useState, useCallback } from "react";
 import { HiChevronRight, HiChevronDown } from "react-icons/hi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -160,13 +161,16 @@ export default function CategoryContainer() {
 
       const folders = res.filter((item: any) => isDirectory(item.type));
       const files = res.filter((item: any) => !isDirectory(item.type));
+      const flattenToRight = isFlatSubfoldersDir(file.name);
 
-      // 子文件夹始终显示在左侧树形结构中
-      const folderNodes: CategoryNode[] = folders.map((item: any) => ({
-        name: item.name,
-        path: item.path,
-        type: item.type,
-      }));
+      // 默认：子文件夹挂在左侧树下；仅 cate_p：子文件夹进右侧，与文件一起展示
+      const folderNodes: CategoryNode[] = flattenToRight
+        ? []
+        : folders.map((item: any) => ({
+            name: item.name,
+            path: item.path,
+            type: item.type,
+          }));
 
       const newTree = new Map(categoryTree);
       const alreadyHasChildren = newTree.has(file.path);
@@ -181,8 +185,8 @@ export default function CategoryContainer() {
         });
       }
 
-      // 右侧仅显示当前文件夹中的文件
-      setSourcelist(files);
+      // 右侧：默认只放文件；cate_p 把子文件夹也并进去
+      setSourcelist(flattenToRight ? [...files, ...folders] : files);
 
       if (files.length > 0) {
         setCurrentFile(files[0]);

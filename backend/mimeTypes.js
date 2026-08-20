@@ -95,6 +95,10 @@ function getFileCategory(mimeType) {
   if (!mimeType) return FILE_TYPE_CATEGORIES.UNKNOWN;
   
   const lowerMimeType = mimeType.toLowerCase();
+
+  if (lowerMimeType.includes("mpegurl")) {
+    return FILE_TYPE_CATEGORIES.VIDEO;
+  }
   
   if (lowerMimeType.startsWith('video/')) {
     return FILE_TYPE_CATEGORIES.VIDEO;

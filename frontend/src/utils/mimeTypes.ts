@@ -95,6 +95,10 @@ export function getFileCategory(mimeType: string): string {
   if (!mimeType) return FILE_TYPE_CATEGORIES.UNKNOWN;
   
   const lowerMimeType = mimeType.toLowerCase();
+
+  if (lowerMimeType.includes("mpegurl")) {
+    return FILE_TYPE_CATEGORIES.VIDEO;
+  }
   
   if (lowerMimeType.startsWith('video/')) {
     return FILE_TYPE_CATEGORIES.VIDEO;
@@ -217,6 +221,14 @@ export function isImageFile(mimeType: string): boolean {
  */
 export function isDocumentFile(mimeType: string): boolean {
   return getFileCategory(mimeType) === FILE_TYPE_CATEGORIES.DOCUMENT;
+}
+
+/**
+ * cate_p 平铺过来的 HLS 包：type 是 mpegurl，展示名是文件夹名（没有 .m3u8 后缀）
+ */
+export function isHlsPackageFile(file?: { name?: string; type?: string } | null): boolean {
+  if (!file?.type) return false;
+  return file.type.toLowerCase().includes("mpegurl");
 }
 
 /**

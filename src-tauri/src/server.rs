@@ -13,6 +13,7 @@ use tokio::fs::File;
 use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tower_http::cors::{Any, CorsLayer};
 
+use crate::hls::{find_hls_playlist, is_m3u8_path, playlist_mime, rewrite_hls_playlist, stream_content_type};
 use crate::media::is_playable_media_path;
 use crate::mime::{
     get_mime_type_from_extension, is_directory, is_media_or_dir, DIRECTORY,
@@ -90,6 +91,11 @@ async fn get_files(
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("读取目录失败: {e}")))?;
 
     let mut files = Vec::new();
+    let flatten_subfolders = scan_path
+        .file_name()
+        .and_then(|n| n.to_str())
+        == Some("cate_p");
+
     while let Some(entry) = entries
         .next_entry()
         .await
@@ -103,6 +109,22 @@ async fn get_files(
             .map(|t| t.is_dir())
             .unwrap_or(false)
         {
+            // 仅 cate_p：子文件夹当成右侧资源（HLS 包指向 m3u8）；其它目录仍返回为文件夹
+            if flatten_subfolders {
+                if let Some(playlist) = find_hls_playlist(&full_path) {
+                    if is_playable_media_path(&playlist)
+                        && (keyword.is_empty()
+                            || name.to_ascii_lowercase().contains(&keyword))
+                    {
+                        files.push(FileEntry {
+                            name,
+                            file_type: playlist_mime().to_string(),
+                            path: playlist.to_string_lossy().to_string(),
+                        });
+                    }
+                    continue;
+                }
+            }
             DIRECTORY.to_string()
         } else {
             get_mime_type_from_extension(&name)
@@ -153,8 +175,24 @@ async fn stream_video(
     let meta = tokio::fs::metadata(&path)
         .await
         .map_err(|e| (StatusCode::NOT_FOUND, format!("文件不存在: {e}")))?;
+
+    if is_m3u8_path(&path) {
+        let raw = tokio::fs::read_to_string(&path)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        let content = raw.strip_prefix('\u{feff}').unwrap_or(&raw);
+        let rewritten = rewrite_hls_playlist(content, &path);
+        return Ok(Response::builder()
+            .status(StatusCode::OK)
+            .header(header::CONTENT_TYPE, playlist_mime())
+            .header(header::CACHE_CONTROL, "no-store")
+            .header(header::CONTENT_LENGTH, rewritten.len())
+            .body(Body::from(rewritten))
+            .unwrap());
+    }
+
     let file_size = meta.len();
-    let content_type = get_mime_type_from_extension(&video_path);
+    let content_type = stream_content_type(&path);
 
     let range_header = headers
         .get(header::RANGE)

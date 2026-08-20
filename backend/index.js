@@ -10,6 +10,13 @@ const {
   isDirectory,
 } = require("./mimeTypes");
 const { isPlayableMediaFile } = require("./mediaProbe");
+const {
+  PLAYLIST_MIME,
+  findHlsPlaylist,
+  isM3u8Path,
+  streamContentType,
+  rewriteHlsPlaylist,
+} = require("./hls");
 
 const DEFAULT_PORT = 3001;
 const DEFAULT_SCAN_PATH = process.env.PLAYER_API_DEFAULT_PATH || process.cwd();
@@ -138,10 +145,20 @@ const createExpressApp = (options = {}) => {
     const keyword = req.query.keyword || "";
 
     const files = await readDirectory(scanPath);
-    const mediaOrDirs = files.filter((file) => {
+    const flattenSubfolders = path.basename(scanPath) === "cate_p";
+    const mapped = files.map((file) => {
+      if (!isDirectory(file.type) || !flattenSubfolders) return file;
+      const playlist = findHlsPlaylist(file.path);
+      if (!playlist) return file;
+      return {
+        name: file.name,
+        type: PLAYLIST_MIME,
+        path: playlist,
+      };
+    });
+    const mediaOrDirs = mapped.filter((file) => {
       if (!isMediaOrDir(file)) return false;
       if (isDirectory(file.type)) return true;
-      // 丢掉截断/假 MP4/TS 冒充等无法播放的文件，不返回给前端
       return isPlayableMediaFile(file.path);
     });
     const normalizedKeyword = normalizeKeyword(keyword);
@@ -171,10 +188,26 @@ const createExpressApp = (options = {}) => {
       return res.status(400).json({ message: "path required" });
     }
 
+    if (isM3u8Path(videoPath)) {
+      try {
+        let raw = fs.readFileSync(videoPath, "utf8");
+        if (raw.charCodeAt(0) === 0xfeff) {
+          raw = raw.slice(1);
+        }
+        const rewritten = rewriteHlsPlaylist(raw, videoPath);
+        res.setHeader("Content-Type", PLAYLIST_MIME);
+        res.setHeader("Cache-Control", "no-store");
+        return res.send(rewritten);
+      } catch (err) {
+        return res.status(404).json({ message: `文件不存在: ${err.message}` });
+      }
+    }
+
     const stat = fs.statSync(videoPath);
     const fileSize = stat.size;
     const range = req.headers.range;
-    const contentType = getMimeTypeFromExtension(videoPath);
+    const contentType =
+      streamContentType(videoPath) || getMimeTypeFromExtension(videoPath);
 
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");
