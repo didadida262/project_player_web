@@ -18,6 +18,7 @@ import {
 } from "react-icons/hi";
 import { MdFullscreen } from "react-icons/md";
 import customToast from "./customToast";
+import VideoLoading from "./VideoLoading";
 
 async function getTauriWindow() {
   try {
@@ -108,8 +109,13 @@ export default function VideoContainer() {
   const isFullscreenRef = useRef(false);
   const hlsRef = useRef<Hls | null>(null);
   const flvPlayerRef = useRef<flvjs.Player | null>(null);
+  /** 当前已可播的片源 key；与 mediaKey 不一致时视为加载中，换源当帧就能盖住原生控件 */
+  const [readyMediaKey, setReadyMediaKey] = useState<string | null>(null);
 
   isFullscreenRef.current = isFullscreen;
+
+  const mediaKey = `${currentFile.name || ""}::${currentfileurl || ""}`;
+  const isVideoLoading = Boolean(currentfileurl) && readyMediaKey !== mediaKey;
 
   /** 全屏后壳层被 display:none，焦点常留在隐藏搜索框/按钮或原生 video 上，导致快捷键失效 */
   const reclaimKeyboardFocus = () => {
@@ -638,18 +644,27 @@ export default function VideoContainer() {
       <div
         ref={containerRef}
         tabIndex={-1}
-        className="video native-video-host w-full min-h-0 min-w-0 flex-1 selectedG flex justify-center items-center rounded-lg outline-none"
+        className="video native-video-host w-full min-h-0 min-w-0 flex-1 selectedG relative flex justify-center items-center rounded-lg outline-none"
       >
+        {isVideoLoading && <VideoLoading fileName={displayFileName} />}
         <video
           ref={videoRef}
           muted={false}
           tabIndex={-1}
           className="outline-none focus:outline-none focus:ring-0 focus:border-0"
           autoPlay
-          controls
+          controls={!isVideoLoading}
           playsInline
-          style={videoStyle}
+          style={{
+            ...videoStyle,
+            opacity: isVideoLoading ? 0 : 1,
+            pointerEvents: isVideoLoading ? "none" : "auto",
+          }}
           onEnded={handleNext}
+          onCanPlay={() => setReadyMediaKey(mediaKey)}
+          onPlaying={() => setReadyMediaKey(mediaKey)}
+          onLoadedData={() => setReadyMediaKey(mediaKey)}
+          onError={() => setReadyMediaKey(mediaKey)}
           onDoubleClick={(e) => {
             e.preventDefault();
             void handleToggleFullscreen();

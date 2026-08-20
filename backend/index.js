@@ -9,6 +9,7 @@ const {
   isAudioFile,
   isDirectory,
 } = require("./mimeTypes");
+const { isPlayableMediaFile } = require("./mediaProbe");
 
 const DEFAULT_PORT = 3001;
 const DEFAULT_SCAN_PATH = process.env.PLAYER_API_DEFAULT_PATH || process.cwd();
@@ -137,7 +138,12 @@ const createExpressApp = (options = {}) => {
     const keyword = req.query.keyword || "";
 
     const files = await readDirectory(scanPath);
-    const mediaOrDirs = files.filter(isMediaOrDir);
+    const mediaOrDirs = files.filter((file) => {
+      if (!isMediaOrDir(file)) return false;
+      if (isDirectory(file.type)) return true;
+      // 丢掉截断/假 MP4/TS 冒充等无法播放的文件，不返回给前端
+      return isPlayableMediaFile(file.path);
+    });
     const normalizedKeyword = normalizeKeyword(keyword);
     const filteredFiles = mediaOrDirs.filter((file) =>
       matchByKeyword(file.name, normalizedKeyword),

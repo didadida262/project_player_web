@@ -13,8 +13,9 @@ use tokio::fs::File;
 use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tower_http::cors::{Any, CorsLayer};
 
+use crate::media::is_playable_media_path;
 use crate::mime::{
-    get_mime_type_from_extension, is_media_or_dir, DIRECTORY,
+    get_mime_type_from_extension, is_directory, is_media_or_dir, DIRECTORY,
 };
 
 #[derive(Clone)]
@@ -108,6 +109,10 @@ async fn get_files(
         };
 
         if !is_media_or_dir(&file_type) {
+            continue;
+        }
+        // 目录照常返回；音视频再探容器头，丢掉截断/假 MP4/TS 冒充等无法播放的文件
+        if !is_directory(&file_type) && !is_playable_media_path(&full_path) {
             continue;
         }
         if !keyword.is_empty() && !name.to_ascii_lowercase().contains(&keyword) {
