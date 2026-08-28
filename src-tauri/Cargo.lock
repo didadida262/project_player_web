@@ -1782,7 +1782,7 @@ dependencies = [
 
 [[package]]
 name = "isshin-player"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "axum",
  "serde",

@@ -7,3 +7,8 @@ commands.allow = ["pick_directory"]
 identifier = "allow-show-item-in-folder"
 description = "Allows revealing a file in the system file manager."
 commands.allow = ["show_item_in_folder"]
+
+[[permission]]
+identifier = "allow-delete-local-file"
+description = "Allows deleting a local media file or HLS package after confirmation."
+commands.allow = ["delete_local_file"]

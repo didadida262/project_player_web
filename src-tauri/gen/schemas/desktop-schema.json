@@ -345,6 +345,12 @@
       "description": "Permission identifier",
       "oneOf": [
         {
+          "description": "Allows deleting a local media file or HLS package after confirmation.",
+          "type": "string",
+          "const": "allow-delete-local-file",
+          "markdownDescription": "Allows deleting a local media file or HLS package after confirmation."
+        },
+        {
           "description": "Allows selecting a local directory via the native folder picker.",
           "type": "string",
           "const": "allow-pick-directory",

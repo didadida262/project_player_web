@@ -15,6 +15,7 @@ import {
   HiOutlineRefresh,
   HiOutlinePlay,
   HiOutlineFolderOpen,
+  HiOutlineTrash,
 } from "react-icons/hi";
 import { MdFullscreen } from "react-icons/md";
 import customToast from "./customToast";
@@ -94,8 +95,10 @@ export default function VideoContainer() {
     currentFile,
     selectFile,
     setCurrentFile,
+    setcurrentfileurl,
     getNextVideo,
     sourcelist,
+    setSourcelist,
     prevStack,
     setPrevStack,
   } = useResources();
@@ -175,6 +178,89 @@ export default function VideoContainer() {
         customToast.error(result?.error || "打开文件夹失败");
       }
     } catch {
+      customToast.info("请在桌面版（Tauri）中使用此功能");
+    }
+  };
+
+  const handleDeleteLocalFile = async () => {
+    const filePath = currentFile?.path;
+    const fileName = currentFile?.name;
+    if (!filePath || typeof filePath !== "string") {
+      customToast.error("无法获取文件路径");
+      return;
+    }
+
+    const restoreFile = { ...currentFile };
+
+    // 先释放文件占用，避免删除时被播放器占用（尤其 Windows）
+    try {
+      const video = videoRef.current;
+      video?.pause();
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+      if (flvPlayerRef.current) {
+        flvPlayerRef.current.destroy();
+        flvPlayerRef.current = null;
+      }
+      if (video) {
+        video.removeAttribute("src");
+      }
+    } catch {
+      // ignore cleanup errors
+    }
+
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const result = await invoke<{
+        ok: boolean;
+        cancelled?: boolean;
+        error?: string;
+      }>("delete_local_file", { path: filePath });
+
+      if (result?.cancelled) {
+        // 取消删除：清空后再设回，强制重新挂载片源
+        setcurrentfileurl("");
+        queueMicrotask(() => selectFile(restoreFile));
+        return;
+      }
+
+      if (!result?.ok) {
+        customToast.error(result?.error || "删除失败");
+        setcurrentfileurl("");
+        queueMicrotask(() => selectFile(restoreFile));
+        return;
+      }
+
+      const remaining = sourcelist.filter(
+        (item: any) => item.path !== filePath && item.name !== fileName,
+      );
+      setSourcelist(remaining);
+      setPrevStack(
+        (prevStack || []).filter(
+          (item) => item.path !== filePath && item.name !== fileName,
+        ),
+      );
+
+      if (remaining.length === 0) {
+        setCurrentFile({});
+        setcurrentfileurl("");
+      } else {
+        const deletedIndex = sourcelist.findIndex(
+          (item: any) => item.path === filePath || item.name === fileName,
+        );
+        const nextIndex =
+          deletedIndex >= 0
+            ? Math.min(deletedIndex, remaining.length - 1)
+            : 0;
+        setCurrentFile(remaining[nextIndex]);
+      }
+
+      customToast.success("已删除本地资源");
+    } catch {
+      setcurrentfileurl("");
+      queueMicrotask(() => selectFile(restoreFile));
       customToast.info("请在桌面版（Tauri）中使用此功能");
     }
   };
@@ -657,6 +743,15 @@ export default function VideoContainer() {
             aria-label="在文件夹中显示当前视频"
           >
             <HiOutlineFolderOpen className="w-6 h-6" />
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteLocalFile}
+            className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-md text-rose-300/90 hover:text-rose-200 hover:bg-rose-500/15 transition-colors focus:outline-none"
+            title="删除本地资源"
+            aria-label="删除当前本地资源"
+          >
+            <HiOutlineTrash className="w-6 h-6" />
           </button>
         </div>
       )}
