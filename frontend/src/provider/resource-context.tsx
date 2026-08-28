@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useCallback,
+  useMemo,
   ReactNode,
 } from "react";
 import api from "../api/index";
@@ -77,7 +78,7 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
     expandLeftSidebarRef.current?.();
   }, []);
 
-  const getNextVideo = () => {
+  const getNextVideo = useCallback(() => {
     //   播放结束，根据当前播放模式，选择下一个
     if (sourcelist.length === 0) {
       return null;
@@ -102,7 +103,7 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
     
     const nextFile = sourcelist[nextFileIndex];
     return nextFile || null;
-  };
+  }, [sourcelist, currentFile.name, palyerMode]);
 
   const handleVideoFile = (file: BlobPart) => {
     const blob = new Blob([file], { type: "video/mp4" });
@@ -129,7 +130,7 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
       "http://127.0.0.1:3001";
     setcurrentfileurl(`${apiBase}/video?path=${encodedPath}`);
   };
-  const selectFile = (file: TFile) => {
+  const selectFile = useCallback((file: TFile) => {
     switch (file.type) {
       case "video/mp4":
       case "video/x-flv":
@@ -141,36 +142,56 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
       default:
         break;
     }
-  };
+  }, []);
+
+  // 长列表下 context 每次都换新对象会让所有消费者重渲染，这里按依赖收敛
+  const value = useMemo<ResourcesContextType>(
+    () => ({
+      currentpath,
+      categories,
+      sourcelist,
+      palyerMode,
+      currentCate,
+      currentFile,
+      currentfileurl,
+      categoryTree,
+      expandedPaths,
+      setPalyerMode,
+      setCurrentpath,
+      setSourcelist,
+      setCategories,
+      prevStack,
+      setPrevStack,
+      setCurrentCate,
+      setCurrentFile,
+      setcurrentfileurl,
+      setCategoryTree,
+      setExpandedPaths,
+      selectFile,
+      getNextVideo,
+      registerExpandLeftSidebar,
+      requestExpandLeftSidebar,
+    }),
+    [
+      currentpath,
+      categories,
+      sourcelist,
+      palyerMode,
+      currentCate,
+      currentFile,
+      currentfileurl,
+      categoryTree,
+      expandedPaths,
+      prevStack,
+      selectFile,
+      getNextVideo,
+      registerExpandLeftSidebar,
+      requestExpandLeftSidebar,
+    ],
+  );
+
   return (
-    <ResourcesContext.Provider
-      value={{
-        currentpath,
-        categories,
-        sourcelist,
-        palyerMode,
-        currentCate,
-        currentFile,
-        currentfileurl,
-        categoryTree,
-        expandedPaths,
-        setPalyerMode,
-        setCurrentpath,
-        setSourcelist,
-        setCategories,
-        prevStack,
-        setPrevStack,
-        setCurrentCate,
-        setCurrentFile,
-        setcurrentfileurl,
-        setCategoryTree,
-        setExpandedPaths,
-        selectFile,
-        getNextVideo,
-        registerExpandLeftSidebar,
-        requestExpandLeftSidebar,
-      }}
-    >
+    <ResourcesContext.Provider value={value}>
       {children}
     </ResourcesContext.Provider>
   );

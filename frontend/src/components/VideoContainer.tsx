@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -117,6 +118,22 @@ export default function VideoContainer() {
   const [mediaFailed, setMediaFailed] = useState(false);
 
   isFullscreenRef.current = isFullscreen;
+
+  /** 尺寸没有实质变化就不写 state，避免 ResizeObserver → 重排 → ResizeObserver 的抖动 */
+  const applyContainerSize = useCallback((width: number, height: number) => {
+    if (!(width > 0 && height > 0)) return;
+    setContainerSize((prev) =>
+      Math.abs(prev.width - width) < 0.5 && Math.abs(prev.height - height) < 0.5
+        ? prev
+        : { width, height },
+    );
+  }, []);
+
+  const measureContainer = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    applyContainerSize(el.clientWidth, el.clientHeight);
+  }, [applyContainerSize]);
 
   const mediaKey = `${currentFile.name || ""}::${currentfileurl || ""}`;
   const isVideoLoading = Boolean(currentfileurl) && readyMediaKey !== mediaKey && !mediaFailed;
@@ -426,19 +443,20 @@ export default function VideoContainer() {
     selectFile(currentFile);
   }, [currentFile]);
 
-  // 全屏时用视口尺寸排版视频；退出时恢复容器测量
+  // 全屏时用视口尺寸排版视频；退出时立刻按真实容器重测，
+  // 否则会继续沿用视口高度算尺寸，把画面撑出播放区
   useEffect(() => {
-    if (!isFullscreen) return;
+    if (!isFullscreen) {
+      const rafId = requestAnimationFrame(() => measureContainer());
+      return () => cancelAnimationFrame(rafId);
+    }
     const update = () => {
-      setContainerSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
+      applyContainerSize(window.innerWidth, window.innerHeight);
     };
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, [isFullscreen]);
+  }, [isFullscreen, applyContainerSize, measureContainer]);
 
   // 仅在「播放器全屏」态卸载时退出系统全屏；切分类导致 VideoContainer 卸载不应动窗口尺寸
   useEffect(() => {
@@ -576,16 +594,7 @@ export default function VideoContainer() {
       if (videoRef.current?.videoWidth && videoRef.current.videoHeight) {
         setVideoRatio(videoRef.current.videoWidth / videoRef.current.videoHeight);
         // 视频元数据加载后，强制更新一次容器尺寸，确保计算正确
-        if (containerRef.current) {
-          requestAnimationFrame(() => {
-            if (containerRef.current) {
-              setContainerSize({
-                width: containerRef.current.clientWidth,
-                height: containerRef.current.clientHeight,
-              });
-            }
-          });
-        }
+        requestAnimationFrame(() => measureContainer());
       }
     };
 
@@ -594,36 +603,22 @@ export default function VideoContainer() {
     return () => {
       videoEl.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
-  }, [currentFile]);
+  }, [currentFile, measureContainer]);
 
   useEffect(() => {
     if (!containerRef.current) return;
-    
-    const updateContainerSize = () => {
-      if (containerRef.current) {
-        // 直接获取尺寸，不使用 requestAnimationFrame，确保立即更新
-        const width = containerRef.current.clientWidth;
-        const height = containerRef.current.clientHeight;
-        // 只有当尺寸有效时才更新，避免设置为 0
-        if (width > 0 && height > 0) {
-          setContainerSize({ width, height });
-        }
-      }
-    };
-    
+
     // 立即获取初始尺寸，使用双重 requestAnimationFrame 确保在布局完成后获取
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        updateContainerSize();
+        measureContainer();
       });
     });
     
     const resizeObserver = new ResizeObserver((entries) => {
       const entry = entries[0];
-      setContainerSize({
-        width: entry.contentRect.width,
-        height: entry.contentRect.height,
-      });
+      if (isFullscreenRef.current) return;
+      applyContainerSize(entry.contentRect.width, entry.contentRect.height);
     });
     resizeObserver.observe(containerRef.current);
     
@@ -634,7 +629,7 @@ export default function VideoContainer() {
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
         rafId = requestAnimationFrame(() => {
-          updateContainerSize();
+          if (!isFullscreenRef.current) measureContainer();
           rafId = null;
         });
       });
@@ -647,7 +642,7 @@ export default function VideoContainer() {
       window.removeEventListener('resize', handleWindowResize);
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, []);
+  }, [applyContainerSize, measureContainer]);
 
   // 盒宽或片源比例变化后，在提交到 DOM 的同一轮末尾推一把原生控件排版（修复首帧截断）
   useLayoutEffect(() => {
@@ -697,13 +692,16 @@ export default function VideoContainer() {
       height = width / videoRatio;
     }
     
-    // 确保不超过容器尺寸（双重保险）
-    width = Math.min(width, containerSize.width);
-    height = Math.min(height, containerSize.height);
+    // 确保不超过容器尺寸（双重保险）；向下取整避免亚像素反复触发 ResizeObserver
+    width = Math.floor(Math.min(width, containerSize.width));
+    height = Math.floor(Math.min(height, containerSize.height));
     
     return {
       width: `${width}px`,
       height: `${height}px`,
+      // 测量值可能短暂过期（换源、退出全屏、侧栏动画），用百分比上限兜底，绝不撑出容器
+      maxWidth: "100%",
+      maxHeight: "100%",
       // 框已与片源比例一致；contain 在比例精确时铺满框，取整略有偏差时比 fill 更不易拉变形
       objectFit: "contain",
       display: "block",
@@ -723,9 +721,9 @@ export default function VideoContainer() {
     : calculateVideoSize();
 
   return (
-    <div className="w-full h-full min-w-0 flex flex-col bg-black">
+    <div className="w-full h-full min-w-0 min-h-0 flex flex-col bg-black">
       {currentFile.name && (
-        <div className="video-fs-title w-full px-4 py-2 flex items-center gap-2 min-w-0">
+        <div className="video-fs-title w-full shrink-0 px-4 py-2 flex items-center gap-2 min-w-0">
           <div className="min-w-0 flex-1 overflow-hidden flex items-center justify-start">
             <span
               className="inline-block max-w-full truncate text-left text-[16px] font-semibold bg-gradient-to-r from-cyan-300 via-white to-purple-300 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(56,189,248,0.7)]"
@@ -814,7 +812,7 @@ export default function VideoContainer() {
           }}
         />
       </div>
-      <div className="video-fs-ops operation w-full h-[50px] flex justify-start items-center gap-x-[10px]">
+      <div className="video-fs-ops operation w-full h-[50px] shrink-0 flex justify-start items-center gap-x-[10px]">
         <button
           type="button"
           onClick={handlePlayMode}

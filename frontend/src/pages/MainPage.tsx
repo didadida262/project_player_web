@@ -55,8 +55,9 @@ export default function MainPage(props: IProps) {
         </div>
 
         {/* 中间视频区 */}
-        <div className="player-stage flex-1 h-full flex flex-col justify-between items-center markBorderT backdrop-blur-sm bg-black/20 min-w-0">
-          <div className="w-full min-w-0 px-[8px] py-[8px] flex-1">
+        <div className="player-stage flex-1 h-full min-h-0 flex flex-col justify-between items-center markBorderT backdrop-blur-sm bg-black/20 min-w-0">
+          {/* min-h-0 必须保留：否则播放器按内容撑高（竖屏视频尤其明显），容器越量越大 */}
+          <div className="w-full min-w-0 min-h-0 px-[8px] py-[8px] flex-1">
             {currentFile.type && isVideoFile(currentFile.type) && (
               <VideoContainer />
             )}

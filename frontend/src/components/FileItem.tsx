@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   HiFolder,
   HiDocumentText,
@@ -8,7 +9,6 @@ import {
   HiQuestionMarkCircle,
 } from "react-icons/hi";
 import cn from "classnames";
-import { useResources } from "../provider/resource-context";
 import {
   getFileCategory,
   FILE_TYPE_CATEGORIES,
@@ -17,6 +17,9 @@ import { isFlatSubfoldersDir } from "../utils/flatSubfolders";
 
 interface IProps {
   file: any;
+  selected: boolean;
+  cateName?: string;
+  onSelect: (file: any) => void;
 }
 
 /** cate_p 平铺资源的标识：叠层卡片，避免和普通视频的圆形 Play 搞混 */
@@ -60,29 +63,22 @@ const renderIcon = (file: any, cateName?: string) => {
   return mapIcon[category] || <HiQuestionMarkCircle className="text-gray-400" />;
 };
 
-export default function FileItem(props: IProps) {
-  const { currentFile, setCurrentFile, currentCate } = useResources();
-  const { file } = props;
-
-  const handleClick = () => {
-    setCurrentFile(file);
-  };
-
+function FileItem({ file, selected, cateName, onSelect }: IProps) {
   return (
     <div
       data-name={file.name}
       className={cn(
         "w-full h-[110px] flex flex-col justify-between items-center hover:cursor-pointer",
         "hover:border-[#0acaff] hover:border-[3px]",
-        currentFile.name === file.name
+        selected
           ? "border-[#0acaff] border-[3px] border-solid"
           : "border-[1px] border-solid border-[#383b45]",
         "px-3"
       )}
-      onClick={handleClick}
+      onClick={() => onSelect(file)}
     >
       <div className="w-full h-[calc(100%_-_35px)] flex justify-center items-center text-[30px]">
-        {renderIcon(file, currentCate?.name)}
+        {renderIcon(file, cateName)}
       </div>
       <div className="w-full h-[35px] flex justify-center items-center px-1">
         <span className="text-[11px] text-white text-center leading-tight break-words">
@@ -92,3 +88,6 @@ export default function FileItem(props: IProps) {
     </div>
   );
 }
+
+// 大列表下每次播放状态变化都会刷新父组件，这里挡住无关重渲染
+export default memo(FileItem);

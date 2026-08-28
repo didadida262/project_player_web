@@ -102,6 +102,10 @@ async fn get_files(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
     {
         let name = entry.file_name().to_string_lossy().to_string();
+        // 关键字先筛：不匹配的条目无需再做探测容器头、找 m3u8 这类磁盘 IO
+        if !keyword.is_empty() && !name.to_ascii_lowercase().contains(&keyword) {
+            continue;
+        }
         let full_path = entry.path();
         let file_type = if entry
             .file_type()
@@ -112,10 +116,7 @@ async fn get_files(
             // 仅 cate_p：子文件夹当成右侧资源（HLS 包指向 m3u8）；其它目录仍返回为文件夹
             if flatten_subfolders {
                 if let Some(playlist) = find_hls_playlist(&full_path) {
-                    if is_playable_media_path(&playlist)
-                        && (keyword.is_empty()
-                            || name.to_ascii_lowercase().contains(&keyword))
-                    {
+                    if is_playable_media_path(&playlist) {
                         files.push(FileEntry {
                             name,
                             file_type: playlist_mime().to_string(),
@@ -135,9 +136,6 @@ async fn get_files(
         }
         // 目录照常返回；音视频再探容器头，丢掉截断/假 MP4/TS 冒充等无法播放的文件
         if !is_directory(&file_type) && !is_playable_media_path(&full_path) {
-            continue;
-        }
-        if !keyword.is_empty() && !name.to_ascii_lowercase().contains(&keyword) {
             continue;
         }
 

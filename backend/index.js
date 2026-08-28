@@ -146,7 +146,12 @@ const createExpressApp = (options = {}) => {
 
     const files = await readDirectory(scanPath);
     const flattenSubfolders = path.basename(scanPath) === "cate_p";
-    const mapped = files.map((file) => {
+    const normalizedKeyword = normalizeKeyword(keyword);
+    // 关键字先筛：不匹配的条目无需再做找 m3u8、探测容器头这类磁盘 IO
+    const byKeyword = files.filter((file) =>
+      matchByKeyword(file.name, normalizedKeyword),
+    );
+    const mapped = byKeyword.map((file) => {
       if (!isDirectory(file.type) || !flattenSubfolders) return file;
       const playlist = findHlsPlaylist(file.path);
       if (!playlist) return file;
@@ -156,15 +161,11 @@ const createExpressApp = (options = {}) => {
         path: playlist,
       };
     });
-    const mediaOrDirs = mapped.filter((file) => {
+    const filteredFiles = mapped.filter((file) => {
       if (!isMediaOrDir(file)) return false;
       if (isDirectory(file.type)) return true;
       return isPlayableMediaFile(file.path);
     });
-    const normalizedKeyword = normalizeKeyword(keyword);
-    const filteredFiles = mediaOrDirs.filter((file) =>
-      matchByKeyword(file.name, normalizedKeyword),
-    );
 
     // 目录优先，其次按文件名字典序（不区分大小写）排序后返回前端
     filteredFiles.sort((a, b) => {

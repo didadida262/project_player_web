@@ -1,11 +1,18 @@
 import { useResources } from '../provider/resource-context'
 import FileItem from './FileItem'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { HiSearch, HiOutlineRefresh, HiOutlineSearch } from 'react-icons/hi'
 import { getFiles } from '@/api/common'
 import type { ApiResponse } from '@/api'
 import { isDirectory } from '../utils/mimeTypes'
 import { isFlatSubfoldersDir } from '../utils/flatSubfolders'
+
+/** 卡片高度与卡片间距（对应 FileItem 的 h-[110px] 与列表的 12px 间隔），虚拟滚动按此定位 */
+const ITEM_HEIGHT = 110
+const ITEM_GAP = 12
+const ROW_HEIGHT = ITEM_HEIGHT + ITEM_GAP
+/** 视口上下各多渲染几屏外的卡片，滚动时不会看到空白 */
+const OVERSCAN = 4
 
 export default function FileList() {
   const { sourcelist, currentFile, currentCate, setSourcelist, setCurrentFile } =
@@ -14,6 +21,8 @@ export default function FileList() {
   const [keyword, setKeyword] = useState('')
   const [appliedKeyword, setAppliedKeyword] = useState('')
   const [isSearching, setIsSearching] = useState(false)
+  const [scrollTop, setScrollTop] = useState(0)
+  const [viewportHeight, setViewportHeight] = useState(0)
 
   const fetchFiles = useCallback(
     async (kw: string) => {
@@ -48,7 +57,7 @@ export default function FileList() {
         setIsSearching(false)
       }
     },
-    [currentCate?.path, setSourcelist]
+    [currentCate?.path, currentCate?.name, setSourcelist]
   )
 
   useEffect(() => {
@@ -61,24 +70,63 @@ export default function FileList() {
   }
 
   useEffect(() => {
-    if (currentFile.name && scrollContainerRef.current) {
-      const container = scrollContainerRef.current
-      const selectedElement = Array.from(container.children).find(
-        (child) => (child as HTMLElement).dataset?.name === currentFile.name
-      ) as HTMLElement | undefined
+    const el = scrollContainerRef.current
+    if (!el) return
+    setViewportHeight(el.clientHeight)
+    const observer = new ResizeObserver(() => setViewportHeight(el.clientHeight))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
-      if (selectedElement) {
-        selectedElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        })
+  // 滚动按帧节流：滚动事件本身很密集，逐次 setState 会让长列表明显掉帧
+  const scrollRafRef = useRef<number | null>(null)
+  const handleScroll = useCallback(() => {
+    if (scrollRafRef.current !== null) return
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null
+      const el = scrollContainerRef.current
+      if (el) setScrollTop(el.scrollTop)
+    })
+  }, [])
+
+  useEffect(
+    () => () => {
+      if (scrollRafRef.current !== null) {
+        cancelAnimationFrame(scrollRafRef.current)
       }
-    }
-  }, [currentFile.name, sourcelist])
+    },
+    []
+  )
+
+  const total = sourcelist.length
+  const { startIndex, visibleFiles } = useMemo(() => {
+    const height = viewportHeight || ITEM_HEIGHT * 6
+    const start = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN)
+    const end = Math.min(
+      total,
+      Math.ceil((scrollTop + height) / ROW_HEIGHT) + OVERSCAN
+    )
+    return { startIndex: start, visibleFiles: sourcelist.slice(start, end) }
+  }, [sourcelist, total, scrollTop, viewportHeight])
+
+  // 选中项滚动到中间：直接算 scrollTop，避免 smooth 动画在长列表里持续重排
+  useEffect(() => {
+    const el = scrollContainerRef.current
+    if (!el || !currentFile?.name) return
+    const index = sourcelist.findIndex(
+      (item: any) => item.name === currentFile.name
+    )
+    if (index < 0) return
+    const centered = index * ROW_HEIGHT - Math.max(0, (el.clientHeight - ITEM_HEIGHT) / 2)
+    const maxTop = Math.max(0, total * ROW_HEIGHT - ITEM_GAP - el.clientHeight)
+    const next = Math.max(0, Math.min(centered, maxTop))
+    el.scrollTop = next
+    setScrollTop(next)
+  }, [currentFile.name, sourcelist, total])
 
   return (
     <div className="w-full h-full flex flex-col gap-3 pr-2">
-      <div className="w-full flex items-center gap-2">
+      <div className="w-full shrink-0 flex items-center gap-2">
         <input
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
@@ -104,10 +152,11 @@ export default function FileList() {
       </div>
       <div
         ref={scrollContainerRef}
-        className="w-full h-full overflow-y-auto flex flex-col gap-3 pr-2"
+        onScroll={handleScroll}
+        className="w-full flex-1 min-h-0 overflow-y-auto pr-2"
       >
-        {sourcelist.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center">
+        {total === 0 ? (
+          <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-[#0acaff] bg-gradient-to-r from-[#0acaff0d] via-[#0acaff14] to-[#0acaff0d] shadow-[0_0_10px_rgba(10,202,255,0.25)]">
               <div className="w-10 h-10 rounded-full border-2 border-[#0acaff] border-dashed flex items-center justify-center text-[#0acaff]">
                 <HiOutlineSearch size={18} />
@@ -116,9 +165,28 @@ export default function FileList() {
             </div>
           </div>
         ) : (
-          sourcelist.map((file: any, index: number) => (
-            <FileItem file={file} key={index}></FileItem>
-          ))
+          <div
+            className="relative w-full"
+            style={{ height: total * ROW_HEIGHT - ITEM_GAP }}
+          >
+            {visibleFiles.map((file: any, offset: number) => {
+              const index = startIndex + offset
+              return (
+                <div
+                  key={file.path || `${file.name}-${index}`}
+                  className="absolute left-0 right-0"
+                  style={{ top: index * ROW_HEIGHT, height: ITEM_HEIGHT }}
+                >
+                  <FileItem
+                    file={file}
+                    selected={currentFile.name === file.name}
+                    cateName={currentCate?.name}
+                    onSelect={setCurrentFile}
+                  />
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     </div>
