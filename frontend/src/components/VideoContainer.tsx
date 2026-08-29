@@ -89,6 +89,9 @@ function seekBy(video: HTMLVideoElement, deltaSeconds: number): boolean {
   return true;
 }
 
+/** 鼠标在画面上静止多久后隐藏控件栏 */
+const CONTROLS_HIDE_DELAY = 2600;
+
 export default function VideoContainer() {
   const {
     currentfileurl,
@@ -123,21 +126,63 @@ export default function VideoContainer() {
   const playbackRateRef = useRef(1);
   const [pointerOverVideo, setPointerOverVideo] = useState(false);
   const [controlsHeld, setControlsHeld] = useState(false);
+  /** 鼠标在画面上静止一段时间后为 true；全屏时整屏都算悬停，靠它才能藏控件 */
+  const [controlsIdle, setControlsIdle] = useState(true);
+  const hideControlsTimerRef = useRef<number | null>(null);
   const clickTimerRef = useRef<number | null>(null);
 
   isFullscreenRef.current = isFullscreen;
 
-  // 只在鼠标悬停在画面上时显示；拖拽进度条、展开倍速菜单期间即使划出画面也保持
-  const controlsVisible = pointerOverVideo || controlsHeld;
+  // 悬停显示；静止后淡出。拖拽进度 / 展开菜单期间靠 controlsHeld 锁住
+  const controlsVisible =
+    controlsHeld || (pointerOverVideo && !controlsIdle);
+
+  const bumpControlsActivity = useCallback(() => {
+    setPointerOverVideo(true);
+    setControlsIdle(false);
+    if (hideControlsTimerRef.current !== null) {
+      window.clearTimeout(hideControlsTimerRef.current);
+    }
+    hideControlsTimerRef.current = window.setTimeout(() => {
+      hideControlsTimerRef.current = null;
+      setControlsIdle(true);
+    }, CONTROLS_HIDE_DELAY);
+  }, []);
 
   useEffect(
     () => () => {
+      if (hideControlsTimerRef.current !== null) {
+        window.clearTimeout(hideControlsTimerRef.current);
+      }
       if (clickTimerRef.current !== null) {
         window.clearTimeout(clickTimerRef.current);
       }
     },
     [],
   );
+
+  // 拖拽 / 菜单结束后：指针还在画面上就重新计时，否则立刻藏
+  useEffect(() => {
+    if (controlsHeld) {
+      if (hideControlsTimerRef.current !== null) {
+        window.clearTimeout(hideControlsTimerRef.current);
+        hideControlsTimerRef.current = null;
+      }
+      setControlsIdle(false);
+      return;
+    }
+    if (!pointerOverVideo) {
+      setControlsIdle(true);
+      return;
+    }
+    if (hideControlsTimerRef.current !== null) {
+      window.clearTimeout(hideControlsTimerRef.current);
+    }
+    hideControlsTimerRef.current = window.setTimeout(() => {
+      hideControlsTimerRef.current = null;
+      setControlsIdle(true);
+    }, CONTROLS_HIDE_DELAY);
+  }, [controlsHeld, pointerOverVideo]);
 
   /** 尺寸没有实质变化就不写 state，避免 ResizeObserver → 重排 → ResizeObserver 的抖动 */
   const applyContainerSize = useCallback((width: number, height: number) => {
@@ -792,8 +837,16 @@ export default function VideoContainer() {
         <div
           className="relative shrink-0"
           style={videoBoxStyle}
-          onMouseEnter={() => setPointerOverVideo(true)}
-          onMouseLeave={() => setPointerOverVideo(false)}
+          onMouseEnter={bumpControlsActivity}
+          onMouseMove={bumpControlsActivity}
+          onMouseLeave={() => {
+            setPointerOverVideo(false);
+            setControlsIdle(true);
+            if (hideControlsTimerRef.current !== null) {
+              window.clearTimeout(hideControlsTimerRef.current);
+              hideControlsTimerRef.current = null;
+            }
+          }}
         >
           <video
             ref={videoRef}
