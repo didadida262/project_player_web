@@ -163,8 +163,8 @@ export default function VideoControls({
   return (
     <div
       className={cn(
-        "absolute inset-x-0 bottom-0 z-30 px-3 pb-3 pt-16",
-        "bg-gradient-to-t from-black/90 via-black/40 to-transparent",
+        "absolute inset-x-0 bottom-0 z-30",
+        "bg-gradient-to-t from-black/90 via-black/55 to-transparent pt-12",
         "transition-opacity duration-300",
         visible ? "opacity-100" : "pointer-events-none opacity-0",
       )}
@@ -175,13 +175,13 @@ export default function VideoControls({
       <div
         className={cn(
           "relative flex flex-col gap-1 overflow-visible",
-          "rounded-2xl border border-white/10 px-3 py-2",
-          "bg-[#0a0f18]/80 backdrop-blur-xl",
-          "shadow-[0_10px_36px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.06)]",
+          "border-t border-white/10 px-3 py-2",
+          "bg-[#0a0f18]/85 backdrop-blur-xl",
+          "shadow-[0_-8px_28px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)]",
         )}
       >
         {/* 顶边一道青紫渐变细线，给整条栏定调 */}
-        <span className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[#0acaff]/70 to-transparent" />
+        <span className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#0acaff]/70 to-transparent" />
 
         <VideoProgress
           videoRef={videoRef}

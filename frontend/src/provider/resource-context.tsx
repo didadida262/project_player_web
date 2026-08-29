@@ -9,7 +9,7 @@ import {
   ReactNode,
 } from "react";
 import api from "../api/index";
-import { isVideoFile } from "../utils/mimeTypes";
+import { isVideoFile, isAudioFile } from "../utils/mimeTypes";
 
 export interface CategoryNode {
   name: string;
@@ -131,16 +131,9 @@ export const ResourcesProvider = ({ children }: { children: ReactNode }) => {
     setcurrentfileurl(`${apiBase}/video?path=${encodedPath}`);
   };
   const selectFile = useCallback((file: TFile) => {
-    switch (file.type) {
-      case "video/mp4":
-      case "video/x-flv":
-      case "audio/mpeg":
-      case "application/vnd.apple.mpegurl":
-      case "application/x-mpegURL":
-        handleStreamFile(file);
-        break;
-      default:
-        break;
+    // 列表里所有音视频都走流式接口；原先只认少数 MIME，mkv/mov/webm 等会一直空 src
+    if (isVideoFile(file.type) || isAudioFile(file.type)) {
+      handleStreamFile(file);
     }
   }, []);
 

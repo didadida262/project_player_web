@@ -117,6 +117,10 @@ export default function VideoContainer() {
   const isFullscreenRef = useRef(false);
   const hlsRef = useRef<Hls | null>(null);
   const flvPlayerRef = useRef<flvjs.Player | null>(null);
+  /** 换源代数：忽略上一次空 src / 旧片源异步打出的 error */
+  const loadGenerationRef = useRef(0);
+  /** 当前期望播放的 URL；onError 时对不上说明是换源残留，直接丢弃 */
+  const activeSourceRef = useRef<string | null>(null);
   /** 当前已可播的片源 key；与 mediaKey 不一致时视为加载中，换源当帧就能盖住画面 */
   const [readyMediaKey, setReadyMediaKey] = useState<string | null>(null);
   const [mediaFailed, setMediaFailed] = useState(false);
@@ -422,17 +426,28 @@ export default function VideoContainer() {
     }
   };
 
-  // 处理HLS流和FLV文件
+  // 处理HLS流和FLV/普通文件
   useEffect(() => {
     if (!currentfileurl || !videoRef.current) return;
 
+    // 文件已切走、URL 还是上一首：等 selectFile 写好新地址再加载，避免错源 + 空 src 竞态
+    const filePath = currentFile.path || "";
+    if (filePath) {
+      const encodedPath = encodeURIComponent(filePath);
+      if (!currentfileurl.includes(encodedPath)) return;
+    }
+
     const video = videoRef.current;
-    const isM3u8 = currentFile.type?.includes('mpegurl') || 
-                   currentFile.name?.toLowerCase().endsWith('.m3u8') || 
-                   currentfileurl.includes('.m3u8');
-    const isFlv = currentFile.type === 'video/x-flv' || 
-                  currentFile.name?.toLowerCase().endsWith('.flv') || 
-                  currentfileurl.includes('.flv');
+    const loadGeneration = ++loadGenerationRef.current;
+    const sourceUrl = currentfileurl;
+    const isM3u8 =
+      currentFile.type?.includes("mpegurl") ||
+      currentFile.name?.toLowerCase().endsWith(".m3u8") ||
+      sourceUrl.includes(".m3u8");
+    const isFlv =
+      currentFile.type === "video/x-flv" ||
+      currentFile.name?.toLowerCase().endsWith(".flv") ||
+      sourceUrl.includes(".flv");
 
     if (hlsRef.current) {
       hlsRef.current.destroy();
@@ -444,11 +459,12 @@ export default function VideoContainer() {
     }
 
     setMediaFailed(false);
-
-    // 只摘掉旧 src，不要 video.load()：空 src 的 load 会异步打出 MEDIA_ERR_SRC_NOT_SUPPORTED，
-    // 和随后的 HLS 接管抢跑，控制条就会随机出现 Error
+    activeSourceRef.current = sourceUrl;
     video.pause();
-    video.removeAttribute("src");
+
+    // 不要先 removeAttribute("src")：空 src 会异步抛 MEDIA_ERR_SRC_NOT_SUPPORTED，
+    // 新片源挂上后仍会被 onError 当成失败，整屏「无法播放此资源」。
+    // 直接覆盖 src + load() 即可中止旧请求并复位控制条。
 
     if (isM3u8) {
       const nativeHls =
@@ -456,26 +472,31 @@ export default function VideoContainer() {
         !!video.canPlayType("application/vnd.apple.mpegurl");
 
       if (nativeHls) {
-        video.src = currentfileurl;
+        video.src = sourceUrl;
         video.load();
         video.play().catch(console.error);
       } else if (Hls.isSupported()) {
+        video.removeAttribute("src");
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,
           backBufferLength: 90,
         });
-        hls.loadSource(currentfileurl);
+        hls.loadSource(sourceUrl);
         hls.attachMedia(video);
         hlsRef.current = hls;
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          if (hlsRef.current !== hls) return;
+          if (hlsRef.current !== hls || loadGenerationRef.current !== loadGeneration) {
+            return;
+          }
           video.play().catch(console.error);
         });
 
         hls.on(Hls.Events.ERROR, (_event, data) => {
-          if (hlsRef.current !== hls) return;
+          if (hlsRef.current !== hls || loadGenerationRef.current !== loadGeneration) {
+            return;
+          }
           console.error("HLS error:", data);
           if (!data.fatal) return;
           switch (data.type) {
@@ -493,7 +514,7 @@ export default function VideoContainer() {
           }
         });
       } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = currentfileurl;
+        video.src = sourceUrl;
         video.load();
         video.play().catch(console.error);
       } else {
@@ -501,32 +522,37 @@ export default function VideoContainer() {
         setMediaFailed(true);
       }
     } else if (isFlv) {
-      // 处理FLV文件
       if (flvjs.isSupported()) {
+        video.removeAttribute("src");
         const flvPlayer = flvjs.createPlayer({
-          type: 'flv',
-          url: currentfileurl,
+          type: "flv",
+          url: sourceUrl,
         });
         flvPlayer.attachMediaElement(video);
         flvPlayer.load();
         flvPlayerRef.current = flvPlayer;
 
-        // 播放准备就绪后自动播放
-        video.addEventListener('loadedmetadata', () => {
+        const onMeta = () => {
+          if (loadGenerationRef.current !== loadGeneration) return;
           video.play().catch(console.error);
-        });
+        };
+        video.addEventListener("loadedmetadata", onMeta);
+        return () => {
+          video.removeEventListener("loadedmetadata", onMeta);
+          if (flvPlayerRef.current) {
+            flvPlayerRef.current.destroy();
+            flvPlayerRef.current = null;
+          }
+        };
       } else {
-        console.error('FLV is not supported in this browser');
+        console.error("FLV is not supported in this browser");
+        setMediaFailed(true);
       }
     } else {
-      // 普通视频文件（如MP4）
-      video.src = currentfileurl;
-      // 换源后显式 load()：只改 src 时 WebKit 原生控制条会留着上一个片源的进度，
-      // 表现为切换后进度条卡在中间、当前时间显示 --:--
+      video.src = sourceUrl;
       video.load();
     }
 
-    // 清理函数
     return () => {
       if (hlsRef.current) {
         hlsRef.current.destroy();
@@ -823,6 +849,16 @@ export default function VideoContainer() {
         ref={containerRef}
         tabIndex={-1}
         className="video w-full min-h-0 min-w-0 flex-1 selectedG relative flex justify-center items-center rounded-lg outline-none"
+        onMouseEnter={bumpControlsActivity}
+        onMouseMove={bumpControlsActivity}
+        onMouseLeave={() => {
+          setPointerOverVideo(false);
+          setControlsIdle(true);
+          if (hideControlsTimerRef.current !== null) {
+            window.clearTimeout(hideControlsTimerRef.current);
+            hideControlsTimerRef.current = null;
+          }
+        }}
       >
         {isVideoLoading && <VideoLoading fileName={displayFileName} />}
         {mediaFailed && (
@@ -833,21 +869,7 @@ export default function VideoContainer() {
             </span>
           </div>
         )}
-        {/* 控件栏叠在这个盒子上，盒子与画面同尺寸，控件才不会飘到黑边里 */}
-        <div
-          className="relative shrink-0"
-          style={videoBoxStyle}
-          onMouseEnter={bumpControlsActivity}
-          onMouseMove={bumpControlsActivity}
-          onMouseLeave={() => {
-            setPointerOverVideo(false);
-            setControlsIdle(true);
-            if (hideControlsTimerRef.current !== null) {
-              window.clearTimeout(hideControlsTimerRef.current);
-              hideControlsTimerRef.current = null;
-            }
-          }}
-        >
+        <div className="relative shrink-0" style={videoBoxStyle}>
           <video
             ref={videoRef}
             muted={false}
@@ -879,7 +901,12 @@ export default function VideoContainer() {
               const el = videoRef.current;
               const code = el?.error?.code;
               if (!el || !code || code === MediaError.MEDIA_ERR_ABORTED) return;
-              if (!el.currentSrc && !hlsRef.current) return;
+              // hls.js 的 fatal 错误自己会置失败；这里的原生 error 多半是回声
+              if (hlsRef.current) return;
+              if (!el.currentSrc) return;
+              // 换源残留：error 抵达时 src 已经不是这次加载的目标
+              const expected = activeSourceRef.current;
+              if (expected && el.currentSrc !== expected) return;
               setMediaFailed(true);
             }}
             onClick={handleVideoClick}
@@ -894,24 +921,25 @@ export default function VideoContainer() {
               }
             }}
           />
-          <VideoControls
-            videoRef={videoRef}
-            mediaKey={mediaKey}
-            isPlaying={isPlaying}
-            playbackRate={playbackRate}
-            playMode={palyerMode}
-            isFullscreen={isFullscreen}
-            visible={controlsVisible}
-            compact={videoBoxRect.width > 0 && videoBoxRect.width < 460}
-            onTogglePlay={handleTogglePlay}
-            onPrev={handlePrev}
-            onNext={handleNext}
-            onChangeRate={handleChangeRate}
-            onTogglePlayMode={handlePlayMode}
-            onToggleFullscreen={() => void handleToggleFullscreen()}
-            onHoldVisibleChange={setControlsHeld}
-          />
         </div>
+        {/* 贴在播放区底部，不跟着画面盒走，竖屏时也不会飘在画面中间 */}
+        <VideoControls
+          videoRef={videoRef}
+          mediaKey={mediaKey}
+          isPlaying={isPlaying}
+          playbackRate={playbackRate}
+          playMode={palyerMode}
+          isFullscreen={isFullscreen}
+          visible={controlsVisible}
+          compact={(containerSize.width || 0) < 520}
+          onTogglePlay={handleTogglePlay}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          onChangeRate={handleChangeRate}
+          onTogglePlayMode={handlePlayMode}
+          onToggleFullscreen={() => void handleToggleFullscreen()}
+          onHoldVisibleChange={setControlsHeld}
+        />
       </div>
     </div>
   );
