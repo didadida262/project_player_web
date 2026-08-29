@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -9,18 +8,10 @@ import {
 import { useResources } from "../provider/resource-context";
 import Hls from "hls.js";
 import flvjs from "flv.js";
-import { isVideoFile } from "../utils/mimeTypes";
-import {
-  HiOutlineSwitchHorizontal,
-  HiOutlineSparkles,
-  HiOutlineRefresh,
-  HiOutlinePlay,
-  HiOutlineFolderOpen,
-  HiOutlineTrash,
-} from "react-icons/hi";
-import { MdFullscreen } from "react-icons/md";
+import { HiOutlineFolderOpen, HiOutlineTrash } from "react-icons/hi";
 import customToast from "./customToast";
 import VideoLoading from "./VideoLoading";
+import VideoControls from "./VideoControls";
 
 async function getTauriWindow() {
   try {
@@ -68,24 +59,34 @@ async function setOsFullscreen(on: boolean) {
 }
 
 /**
- * Blink：首帧自动播放时原生阴影控件常用过时的盒宽排版，控制条会「变短」；
- * 点击 video 会触发布局而恢复。这里用亚像素宽度抖动 + 强制 layout 诱发同一条修复路径，避免依赖用户点击。
+ * currentTime 是 restricted double：写入 NaN/Infinity 会直接抛 TypeError。
+ * 换源瞬间 duration/currentTime 可能还不是有限值，不兜住的话整个快捷键分支会中断，
+ * 全屏下又没有原生控件兜底，表现就是左右键完全没反应。
  */
-function nudgeNativeMediaControlsLayout(video: HTMLVideoElement | null) {
-  if (!video) return;
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const widthStr = video.style.width;
-      const w = parseFloat(widthStr);
-      if (Number.isFinite(w) && widthStr.endsWith("px")) {
-        video.style.width = `${w - 0.25}px`;
-        void video.offsetWidth;
-        video.style.width = widthStr;
-      }
-      void video.offsetWidth;
-      void video.getBoundingClientRect();
-    });
-  });
+function seekBy(video: HTMLVideoElement, deltaSeconds: number): boolean {
+  const current = video.currentTime;
+  if (!Number.isFinite(current)) return false;
+
+  const duration = video.duration;
+  // 直播/时长未知的片源退而用 seekable 的末端做上界
+  const upper = Number.isFinite(duration)
+    ? duration
+    : video.seekable.length > 0
+      ? video.seekable.end(video.seekable.length - 1)
+      : Number.NaN;
+
+  let next = Math.max(0, current + deltaSeconds);
+  if (Number.isFinite(upper)) {
+    next = Math.min(next, upper);
+  }
+  if (!Number.isFinite(next)) return false;
+
+  try {
+    video.currentTime = next;
+  } catch {
+    return false;
+  }
+  return true;
 }
 
 export default function VideoContainer() {
@@ -113,11 +114,30 @@ export default function VideoContainer() {
   const isFullscreenRef = useRef(false);
   const hlsRef = useRef<Hls | null>(null);
   const flvPlayerRef = useRef<flvjs.Player | null>(null);
-  /** 当前已可播的片源 key；与 mediaKey 不一致时视为加载中，换源当帧就能盖住原生控件 */
+  /** 当前已可播的片源 key；与 mediaKey 不一致时视为加载中，换源当帧就能盖住画面 */
   const [readyMediaKey, setReadyMediaKey] = useState<string | null>(null);
   const [mediaFailed, setMediaFailed] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  /** 换源后 WebKit 会把 playbackRate 复位成 1，需要在元数据就绪时重新写回 */
+  const playbackRateRef = useRef(1);
+  const [pointerOverVideo, setPointerOverVideo] = useState(false);
+  const [controlsHeld, setControlsHeld] = useState(false);
+  const clickTimerRef = useRef<number | null>(null);
 
   isFullscreenRef.current = isFullscreen;
+
+  // 只在鼠标悬停在画面上时显示；拖拽进度条、展开倍速菜单期间即使划出画面也保持
+  const controlsVisible = pointerOverVideo || controlsHeld;
+
+  useEffect(
+    () => () => {
+      if (clickTimerRef.current !== null) {
+        window.clearTimeout(clickTimerRef.current);
+      }
+    },
+    [],
+  );
 
   /** 尺寸没有实质变化就不写 state，避免 ResizeObserver → 重排 → ResizeObserver 的抖动 */
   const applyContainerSize = useCallback((width: number, height: number) => {
@@ -158,7 +178,6 @@ export default function VideoContainer() {
     await setOsFullscreen(next);
     // 布局变化后恢复播放（不移动 video 节点，避免断流），并夺回键盘焦点
     requestAnimationFrame(() => {
-      nudgeNativeMediaControlsLayout(video);
       const finish = () => {
         if (next) reclaimKeyboardFocus();
       };
@@ -179,6 +198,42 @@ export default function VideoContainer() {
         : "order";
     setPalyerMode(next);
   };
+
+  const handleTogglePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play().catch(console.error);
+    } else {
+      video.pause();
+    }
+  };
+
+  // 单击播放/暂停、双击全屏：双击会先派发两次 click，用短延时把它让给 dblclick
+  const handleVideoClick = () => {
+    if (clickTimerRef.current !== null) return;
+    clickTimerRef.current = window.setTimeout(() => {
+      clickTimerRef.current = null;
+      handleTogglePlay();
+    }, 220);
+  };
+  const handleVideoDoubleClick = () => {
+    if (clickTimerRef.current !== null) {
+      window.clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+    }
+    void handleToggleFullscreen();
+  };
+
+  const handleChangeRate = (rate: number) => {
+    const video = videoRef.current;
+    // ref 只跟随用户选择：load() 复位倍速时触发的 ratechange 不能污染它，
+    // 否则换源后会把用户选的倍速写回成 1
+    playbackRateRef.current = rate;
+    if (video) video.playbackRate = rate;
+    setPlaybackRate(rate);
+  };
+
   const handleRevealInFolder = async () => {
     const filePath = currentFile?.path;
     if (!filePath || typeof filePath !== "string") {
@@ -357,6 +412,7 @@ export default function VideoContainer() {
 
       if (nativeHls) {
         video.src = currentfileurl;
+        video.load();
         video.play().catch(console.error);
       } else if (Hls.isSupported()) {
         const hls = new Hls({
@@ -393,6 +449,7 @@ export default function VideoContainer() {
         });
       } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = currentfileurl;
+        video.load();
         video.play().catch(console.error);
       } else {
         console.error("HLS is not supported in this browser");
@@ -419,6 +476,9 @@ export default function VideoContainer() {
     } else {
       // 普通视频文件（如MP4）
       video.src = currentfileurl;
+      // 换源后显式 load()：只改 src 时 WebKit 原生控制条会留着上一个片源的进度，
+      // 表现为切换后进度条卡在中间、当前时间显示 --:--
+      video.load();
     }
 
     // 清理函数
@@ -513,25 +573,12 @@ export default function VideoContainer() {
         return;
       }
 
-      // 左右方向键：快进/后退（支持全屏模式）
+      // 左右方向键：快进/后退
       if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-        // 非全屏且焦点在 video 上时，交给原生控件；全屏下原生控件易吞键，改为手动处理
-        if (!fullscreen && tag === "video") {
-          return;
-        }
-
         event.preventDefault();
         event.stopPropagation();
-
-        const seekStep = 10;
-        const currentTime = video.currentTime;
-        const duration = video.duration;
-
-        if (event.key === "ArrowLeft") {
-          video.currentTime = Math.max(0, currentTime - seekStep);
-        } else {
-          video.currentTime = Math.min(duration, currentTime + seekStep);
-        }
+        // 元数据未就绪时 seekBy 会拒绝写入非有限值，静默跳过即可
+        seekBy(video, event.key === "ArrowLeft" ? -10 : 10);
         return;
       }
 
@@ -539,11 +586,7 @@ export default function VideoContainer() {
       if (event.code === "Space" || event.key === " ") {
         event.preventDefault();
         event.stopPropagation();
-        if (video.paused) {
-          video.play().catch(console.error);
-        } else {
-          video.pause();
-        }
+        handleTogglePlay();
         return;
       }
 
@@ -591,8 +634,12 @@ export default function VideoContainer() {
   useEffect(() => {
     if (!videoRef.current) return;
     const handleLoadedMetadata = () => {
-      if (videoRef.current?.videoWidth && videoRef.current.videoHeight) {
-        setVideoRatio(videoRef.current.videoWidth / videoRef.current.videoHeight);
+      const el = videoRef.current;
+      if (!el) return;
+      // load() 会把倍速复位，换源后按用户选择写回
+      el.playbackRate = playbackRateRef.current;
+      if (el.videoWidth && el.videoHeight) {
+        setVideoRatio(el.videoWidth / el.videoHeight);
         // 视频元数据加载后，强制更新一次容器尺寸，确保计算正确
         requestAnimationFrame(() => measureContainer());
       }
@@ -644,44 +691,28 @@ export default function VideoContainer() {
     };
   }, [applyContainerSize, measureContainer]);
 
-  // 盒宽或片源比例变化后，在提交到 DOM 的同一轮末尾推一把原生控件排版（修复首帧截断）
-  useLayoutEffect(() => {
-    nudgeNativeMediaControlsLayout(videoRef.current);
-  }, [
-    containerSize.width,
-    containerSize.height,
-    videoRatio,
-    currentfileurl,
-  ]);
-
+  // 换源时回到播放态默认值，避免上一个片源的播放状态残留在控件上
   useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    const onPlaying = () => nudgeNativeMediaControlsLayout(v);
-    v.addEventListener("playing", onPlaying);
-    return () => v.removeEventListener("playing", onPlaying);
+    setIsPlaying(false);
   }, [currentfileurl]);
 
-  // 根据容器尺寸和视频宽高比计算最佳显示尺寸，尽可能填满容器
-  const calculateVideoSize = (): CSSProperties => {
-    // 未拿到当前片源宽高比或容器未就绪时：只限制最大边，由 object-fit: contain 适配；
-    // 固定像素宽高必须在比例正确时再用，否则原生控制条会铺满「错比例的框」，与画面宽度不一致
-    if (!containerSize.width || !containerSize.height || videoRatio == null) {
-      return {
-        maxWidth: "100%",
-        maxHeight: "100%",
-        width: "auto",
-        height: "auto",
-        objectFit: "contain",
-        display: "block",
-      };
+  // 画面盒尺寸：控件栏叠在这个盒子底部，所以它必须和画面严格同框。
+  // 全屏时铺满视口，画面靠 object-fit 居中，控件栏自然贴在屏幕底部
+  const videoBoxRect = (() => {
+    if (
+      isFullscreen ||
+      !containerSize.width ||
+      !containerSize.height ||
+      videoRatio == null
+    ) {
+      // 比例未知时先铺满容器，由 object-fit: contain 兜住画面
+      return { width: containerSize.width, height: containerSize.height, fill: true };
     }
-    
+
     const containerAspectRatio = containerSize.width / containerSize.height;
-    
     let width: number;
     let height: number;
-    
+
     // 如果容器比视频更宽（容器宽高比 > 视频宽高比），高度填满，宽度按比例
     if (containerAspectRatio > videoRatio) {
       height = containerSize.height;
@@ -691,34 +722,24 @@ export default function VideoContainer() {
       width = containerSize.width;
       height = width / videoRatio;
     }
-    
-    // 确保不超过容器尺寸（双重保险）；向下取整避免亚像素反复触发 ResizeObserver
-    width = Math.floor(Math.min(width, containerSize.width));
-    height = Math.floor(Math.min(height, containerSize.height));
-    
-    return {
-      width: `${width}px`,
-      height: `${height}px`,
-      // 测量值可能短暂过期（换源、退出全屏、侧栏动画），用百分比上限兜底，绝不撑出容器
-      maxWidth: "100%",
-      maxHeight: "100%",
-      // 框已与片源比例一致；contain 在比例精确时铺满框，取整略有偏差时比 fill 更不易拉变形
-      objectFit: "contain",
-      display: "block",
-    };
-  };
 
-  const videoStyle: CSSProperties = isFullscreen
-    ? {
-        width: "100%",
-        height: "100%",
+    // 确保不超过容器尺寸（双重保险）；向下取整避免亚像素反复触发 ResizeObserver
+    return {
+      width: Math.floor(Math.min(width, containerSize.width)),
+      height: Math.floor(Math.min(height, containerSize.height)),
+      fill: false,
+    };
+  })();
+
+  const videoBoxStyle: CSSProperties = videoBoxRect.fill
+    ? { width: "100%", height: "100%" }
+    : {
+        width: `${videoBoxRect.width}px`,
+        height: `${videoBoxRect.height}px`,
+        // 测量值可能短暂过期（换源、退出全屏、侧栏动画），用百分比上限兜底，绝不撑出容器
         maxWidth: "100%",
         maxHeight: "100%",
-        objectFit: "contain",
-        display: "block",
-        backgroundColor: "#000",
-      }
-    : calculateVideoSize();
+      };
 
   return (
     <div className="w-full h-full min-w-0 min-h-0 flex flex-col bg-black">
@@ -756,7 +777,7 @@ export default function VideoContainer() {
       <div
         ref={containerRef}
         tabIndex={-1}
-        className="video native-video-host w-full min-h-0 min-w-0 flex-1 selectedG relative flex justify-center items-center rounded-lg outline-none"
+        className="video w-full min-h-0 min-w-0 flex-1 selectedG relative flex justify-center items-center rounded-lg outline-none"
       >
         {isVideoLoading && <VideoLoading fileName={displayFileName} />}
         {mediaFailed && (
@@ -767,129 +788,77 @@ export default function VideoContainer() {
             </span>
           </div>
         )}
-        <video
-          ref={videoRef}
-          muted={false}
-          tabIndex={-1}
-          className="outline-none focus:outline-none focus:ring-0 focus:border-0"
-          autoPlay={
-            !(
-              currentFile.type?.includes("mpegurl") ||
-              currentFile.name?.toLowerCase().endsWith(".m3u8")
-            )
-          }
-          controls={!isVideoLoading && !mediaFailed}
-          playsInline
-          style={{
-            ...videoStyle,
-            opacity: isVideoLoading || mediaFailed ? 0 : 1,
-            pointerEvents: isVideoLoading || mediaFailed ? "none" : "auto",
-          }}
-          onEnded={handleNext}
-          onCanPlay={() => {
-            if (!videoRef.current?.error) setReadyMediaKey(mediaKey);
-          }}
-          onPlaying={() => setReadyMediaKey(mediaKey)}
-          onLoadedData={() => {
-            if (!videoRef.current?.error) setReadyMediaKey(mediaKey);
-          }}
-          onError={() => {
-            const el = videoRef.current;
-            const code = el?.error?.code;
-            if (!el || !code || code === MediaError.MEDIA_ERR_ABORTED) return;
-            if (!el.currentSrc && !hlsRef.current) return;
-            setMediaFailed(true);
-          }}
-          onDoubleClick={(e) => {
-            e.preventDefault();
-            void handleToggleFullscreen();
-          }}
-          onKeyDown={(e) => {
-            if (e.code === "Space" || e.key === " ") {
-              e.preventDefault();
-              e.stopPropagation();
+        {/* 控件栏叠在这个盒子上，盒子与画面同尺寸，控件才不会飘到黑边里 */}
+        <div
+          className="relative shrink-0"
+          style={videoBoxStyle}
+          onMouseEnter={() => setPointerOverVideo(true)}
+          onMouseLeave={() => setPointerOverVideo(false)}
+        >
+          <video
+            ref={videoRef}
+            muted={false}
+            tabIndex={-1}
+            className="block h-full w-full outline-none focus:outline-none focus:ring-0 focus:border-0"
+            autoPlay={
+              !(
+                currentFile.type?.includes("mpegurl") ||
+                currentFile.name?.toLowerCase().endsWith(".m3u8")
+              )
             }
-          }}
-        />
-      </div>
-      <div className="video-fs-ops operation w-full h-[50px] shrink-0 flex justify-start items-center gap-x-[10px]">
-        <button
-          type="button"
-          onClick={handlePlayMode}
-          className="px-4 py-2 text-[15px] h-9 rounded text-white hover:opacity-90 transition-[background-color,opacity] flex items-center gap-2 justify-center focus:outline-none"
-          style={{
-            backgroundColor:
-              palyerMode === "order"
-                ? "#3b82f6"
-                : palyerMode === "random"
-                ? "#f59e0b"
-                : "#8b5cf6",
-            "--hover-color":
-              palyerMode === "order"
-                ? "#2563eb"
-                : palyerMode === "random"
-                ? "#d97706"
-                : "#7c3aed",
-          } as React.CSSProperties}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor =
-              (e.currentTarget.style as any)["--hover-color"] || "#2563eb";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor =
-              palyerMode === "order"
-                ? "#3b82f6"
-                : palyerMode === "random"
-                ? "#f59e0b"
-                : "#8b5cf6";
-          }}
-        >
-          {palyerMode === "order" && <HiOutlineSwitchHorizontal size={18} />}
-          {palyerMode === "random" && <HiOutlineSparkles size={18} />}
-          {palyerMode === "single" && <HiOutlineRefresh size={18} />}
-          {palyerMode === "order" && "顺序播放"}
-          {palyerMode === "random" && "随机播放"}
-          {palyerMode === "single" && "单曲循环"}
-        </button>
-
-        <button
-          type="button"
-          onClick={handleNext}
-          className="px-4 py-2 text-[15px] h-9 rounded text-white hover:opacity-90 transition-[background-color,opacity] flex items-center gap-2 justify-center focus:outline-none"
-          style={{
-            backgroundColor: "#10b981",
-            "--hover-color": "#059669",
-          } as React.CSSProperties}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#059669";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#10b981";
-          }}
-        >
-          <HiOutlinePlay size={18} />
-          下一个
-        </button>
-
-        <button
-          type="button"
-          onClick={() => void handleToggleFullscreen()}
-          className="px-4 py-2 text-[15px] h-9 rounded text-white hover:opacity-90 transition-[background-color,opacity] flex items-center gap-2 justify-center focus:outline-none"
-          style={{
-            backgroundColor: "#0ea5e9",
-            "--hover-color": "#0284c7",
-          } as React.CSSProperties}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#0284c7";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#0ea5e9";
-          }}
-          title="全屏播放（快捷键 F，Esc 退出）"
-        >
-          <MdFullscreen size={18} />
-          {isFullscreen ? "退出全屏" : "全屏"}
-        </button>
+            playsInline
+            style={{
+              objectFit: "contain",
+              backgroundColor: "#000",
+              opacity: isVideoLoading || mediaFailed ? 0 : 1,
+            }}
+            onEnded={handleNext}
+            onCanPlay={() => {
+              if (!videoRef.current?.error) setReadyMediaKey(mediaKey);
+            }}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onPlaying={() => setReadyMediaKey(mediaKey)}
+            onLoadedData={() => {
+              if (!videoRef.current?.error) setReadyMediaKey(mediaKey);
+            }}
+            onError={() => {
+              const el = videoRef.current;
+              const code = el?.error?.code;
+              if (!el || !code || code === MediaError.MEDIA_ERR_ABORTED) return;
+              if (!el.currentSrc && !hlsRef.current) return;
+              setMediaFailed(true);
+            }}
+            onClick={handleVideoClick}
+            onDoubleClick={(e) => {
+              e.preventDefault();
+              handleVideoDoubleClick();
+            }}
+            onKeyDown={(e) => {
+              if (e.code === "Space" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+          />
+          <VideoControls
+            videoRef={videoRef}
+            mediaKey={mediaKey}
+            isPlaying={isPlaying}
+            playbackRate={playbackRate}
+            playMode={palyerMode}
+            isFullscreen={isFullscreen}
+            visible={controlsVisible}
+            compact={videoBoxRect.width > 0 && videoBoxRect.width < 460}
+            onTogglePlay={handleTogglePlay}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            onChangeRate={handleChangeRate}
+            onTogglePlayMode={handlePlayMode}
+            onToggleFullscreen={() => void handleToggleFullscreen()}
+            onHoldVisibleChange={setControlsHeld}
+          />
+        </div>
       </div>
     </div>
   );

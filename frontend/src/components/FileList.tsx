@@ -1,6 +1,13 @@
 import { useResources } from '../provider/resource-context'
 import FileItem from './FileItem'
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from 'react'
 import { HiSearch, HiOutlineRefresh, HiOutlineSearch } from 'react-icons/hi'
 import { getFiles } from '@/api/common'
 import type { ApiResponse } from '@/api'
@@ -69,14 +76,34 @@ export default function FileList() {
     setAppliedKeyword(keyword)
   }
 
+  /** 以 DOM 的真实偏移为准回写 state：浏览器会自行夹紧滚动位置，state 不跟上就会算错窗口 */
+  const syncScrollTop = useCallback(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const next = el.scrollTop
+    setScrollTop((prev) => (Math.abs(prev - next) < 1 ? prev : next))
+  }, [])
+
   useEffect(() => {
     const el = scrollContainerRef.current
     if (!el) return
     setViewportHeight(el.clientHeight)
-    const observer = new ResizeObserver(() => setViewportHeight(el.clientHeight))
+    const observer = new ResizeObserver(() => {
+      setViewportHeight(el.clientHeight)
+      syncScrollTop()
+    })
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [syncScrollTop])
+
+  // 换目录/搜索后列表长度突变，浏览器会把滚动位置夹回可用范围；
+  // 这里同步回来，否则残留的旧偏移会让虚拟窗口落到列表之外，右侧整片空白
+  useLayoutEffect(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    setViewportHeight(el.clientHeight)
+    syncScrollTop()
+  }, [sourcelist, syncScrollTop])
 
   // 滚动按帧节流：滚动事件本身很密集，逐次 setState 会让长列表明显掉帧
   const scrollRafRef = useRef<number | null>(null)
@@ -84,10 +111,9 @@ export default function FileList() {
     if (scrollRafRef.current !== null) return
     scrollRafRef.current = requestAnimationFrame(() => {
       scrollRafRef.current = null
-      const el = scrollContainerRef.current
-      if (el) setScrollTop(el.scrollTop)
+      syncScrollTop()
     })
-  }, [])
+  }, [syncScrollTop])
 
   useEffect(
     () => () => {
@@ -100,12 +126,13 @@ export default function FileList() {
 
   const total = sourcelist.length
   const { startIndex, visibleFiles } = useMemo(() => {
+    if (total === 0) return { startIndex: 0, visibleFiles: [] as any[] }
     const height = viewportHeight || ITEM_HEIGHT * 6
-    const start = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN)
-    const end = Math.min(
-      total,
-      Math.ceil((scrollTop + height) / ROW_HEIGHT) + OVERSCAN
-    )
+    // 夹紧到列表真实可滚动范围内，保证窗口永远落在列表上，不会渲染出空白
+    const maxTop = Math.max(0, total * ROW_HEIGHT - ITEM_GAP - height)
+    const top = Math.min(Math.max(scrollTop, 0), maxTop)
+    const start = Math.max(0, Math.floor(top / ROW_HEIGHT) - OVERSCAN)
+    const end = Math.min(total, Math.ceil((top + height) / ROW_HEIGHT) + OVERSCAN)
     return { startIndex: start, visibleFiles: sourcelist.slice(start, end) }
   }, [sourcelist, total, scrollTop, viewportHeight])
 
@@ -119,10 +146,10 @@ export default function FileList() {
     if (index < 0) return
     const centered = index * ROW_HEIGHT - Math.max(0, (el.clientHeight - ITEM_HEIGHT) / 2)
     const maxTop = Math.max(0, total * ROW_HEIGHT - ITEM_GAP - el.clientHeight)
-    const next = Math.max(0, Math.min(centered, maxTop))
-    el.scrollTop = next
-    setScrollTop(next)
-  }, [currentFile.name, sourcelist, total])
+    el.scrollTop = Math.max(0, Math.min(centered, maxTop))
+    // 回读而不是沿用计算值：浏览器可能夹紧，state 必须与 DOM 一致
+    syncScrollTop()
+  }, [currentFile.name, sourcelist, total, syncScrollTop])
 
   return (
     <div className="w-full h-full flex flex-col gap-3 pr-2">
