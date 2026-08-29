@@ -57,7 +57,7 @@ function GhostButton({
 }: {
   label: string;
   active?: boolean;
-  size?: "md" | "lg";
+  size?: "md" | "lg" | "xl";
   onClick: () => void;
   children: React.ReactNode;
 }) {
@@ -70,7 +70,7 @@ function GhostButton({
       className={cn(
         "flex items-center justify-center rounded-full transition-all duration-200",
         "focus:outline-none active:scale-90",
-        size === "lg" ? "h-10 w-10" : "h-8 w-8",
+        size === "xl" ? "h-12 w-12" : size === "lg" ? "h-10 w-10" : "h-8 w-8",
         active
           ? "bg-[#0acaff]/15 text-[#0acaff] shadow-[0_0_14px_rgba(10,202,255,0.28)]"
           : "text-white/65 hover:bg-white/10 hover:text-[#7ee7ff] hover:shadow-[0_0_14px_rgba(10,202,255,0.22)]",
@@ -250,43 +250,33 @@ export default function VideoControls({
           </div>
 
           {/* 中：上一个 / 播放暂停 / 下一个 */}
-          <div className="flex items-center gap-4 justify-self-center">
+          <div className="flex items-center gap-5 justify-self-center">
             <GhostButton
               label="上一个（↑ / PageUp）"
-              size="lg"
+              size="xl"
               onClick={onPrev}
             >
-              <MdSkipPrevious size={24} />
+              <MdSkipPrevious size={32} />
             </GhostButton>
 
-            <button
-              type="button"
-              title={isPlaying ? "暂停（空格）" : "播放（空格）"}
-              aria-label={isPlaying ? "暂停" : "播放"}
+            <GhostButton
+              label={isPlaying ? "暂停（空格）" : "播放（空格）"}
+              size="xl"
               onClick={onTogglePlay}
-              className={cn(
-                "group relative flex h-12 w-12 items-center justify-center rounded-full",
-                "bg-gradient-to-br from-[#5fdcff] via-[#0acaff] to-[#7c5cff] text-[#04121a]",
-                "shadow-[0_0_22px_rgba(10,202,255,0.45)]",
-                "transition-transform duration-200 hover:scale-[1.06] active:scale-95",
-                "focus:outline-none",
-              )}
             >
-              <span className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-white/25" />
-              <span className="pointer-events-none absolute -inset-1 rounded-full bg-[#0acaff]/20 opacity-0 blur-md transition-opacity duration-200 group-hover:opacity-100" />
               {isPlaying ? (
-                <HiPause size={24} />
+                <HiPause size={32} />
               ) : (
-                <HiPlay size={24} className="ml-0.5" />
+                <HiPlay size={32} className="ml-0.5" />
               )}
-            </button>
+            </GhostButton>
 
             <GhostButton
               label="下一个（↓ / PageDown）"
-              size="lg"
+              size="xl"
               onClick={onNext}
             >
-              <MdSkipNext size={24} />
+              <MdSkipNext size={32} />
             </GhostButton>
           </div>
 
