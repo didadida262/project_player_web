@@ -72,6 +72,12 @@ yarn desktop:dev
 
 产物目录：`src-tauri/target/release/bundle/`
 
+### Windows 安装 / 升级注意
+
+- **请用 NSIS 安装包**（`Isshin Player_x.y.z_x64-setup.exe`）做日常升级。MSI 与 NSIS 是两套安装体系，**互不覆盖**。
+- 安装新版本时若检测到旧版本，安装程序会弹出提示；确认后会**结束旧进程并覆盖安装到原目录**。
+- 若安装后标题栏版本未变，请检查是否仍从旧路径快捷方式启动，或是否误装了 MSI 而旧的 NSIS 副本仍在。
+
 ## 环境变量
 
 | 变量 | 默认 | 说明 |

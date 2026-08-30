@@ -70,6 +70,13 @@ switch (target) {
       join(root, "src-tauri/target/release/bundle/nsis"),
       /\.exe$/i,
     );
+    console.log(`
+  升级说明：
+  - 请优先使用 NSIS 安装包（*-setup.exe）升级；MSI 与 NSIS 互不覆盖。
+  - 安装前请关闭正在运行的 ${productName}。
+  - 若检测到旧版本，安装程序会提示后覆盖安装到原目录。
+  - 安装完成后请从开始菜单/桌面快捷方式启动，并确认标题栏版本为 v${version}。
+`);
     break;
   default:
     console.error(
