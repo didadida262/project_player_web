@@ -872,7 +872,6 @@ export default function VideoContainer() {
         <div className="relative shrink-0" style={videoBoxStyle}>
           <video
             ref={videoRef}
-            muted={false}
             tabIndex={-1}
             className="block h-full w-full outline-none focus:outline-none focus:ring-0 focus:border-0"
             autoPlay={

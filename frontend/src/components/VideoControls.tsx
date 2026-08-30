@@ -11,6 +11,9 @@ import {
   MdFullscreenExit,
   MdSkipNext,
   MdSkipPrevious,
+  MdVolumeUp,
+  MdVolumeDown,
+  MdVolumeOff,
 } from "react-icons/md";
 import cn from "classnames";
 import VideoProgress from "./VideoProgress";
@@ -132,17 +135,37 @@ export default function VideoControls({
   const [rateMenuOpen, setRateMenuOpen] = useState(false);
   const [hovering, setHovering] = useState(false);
   const [scrubbing, setScrubbing] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
+  const [volumeDragging, setVolumeDragging] = useState(false);
   const rateMenuRef = useRef<HTMLDivElement>(null);
+  const lastVolumeRef = useRef(1);
 
   // 控件栏淡出时把菜单一起收掉，否则会留在半透明的栏外面
   useEffect(() => {
     if (!visible) setRateMenuOpen(false);
   }, [visible]);
 
-  // 悬停、拖拽进度、展开菜单期间都不允许父级自动隐藏控件栏
+  // 与 video 元素音量保持同步（含系统/其他入口改动）
   useEffect(() => {
-    onHoldVisibleChange(hovering || scrubbing || rateMenuOpen);
-  }, [hovering, scrubbing, rateMenuOpen, onHoldVisibleChange]);
+    const video = videoRef.current;
+    if (!video) return;
+    const sync = () => {
+      setVolume(video.volume);
+      setMuted(video.muted);
+      if (video.volume > 0 && !video.muted) {
+        lastVolumeRef.current = video.volume;
+      }
+    };
+    sync();
+    video.addEventListener("volumechange", sync);
+    return () => video.removeEventListener("volumechange", sync);
+  }, [videoRef, mediaKey]);
+
+  // 悬停、拖拽进度/音量、展开菜单期间都不允许父级自动隐藏控件栏
+  useEffect(() => {
+    onHoldVisibleChange(hovering || scrubbing || rateMenuOpen || volumeDragging);
+  }, [hovering, scrubbing, rateMenuOpen, volumeDragging, onHoldVisibleChange]);
 
   useEffect(() => {
     if (!rateMenuOpen) return;
@@ -159,6 +182,42 @@ export default function VideoControls({
   const rateLabel = Number.isInteger(playbackRate)
     ? `${playbackRate}.0x`
     : `${playbackRate}x`;
+
+  const effectiveVolume = muted ? 0 : volume;
+  const VolumeIcon =
+    effectiveVolume === 0
+      ? MdVolumeOff
+      : effectiveVolume < 0.5
+        ? MdVolumeDown
+        : MdVolumeUp;
+
+  const handleVolumeInput = (value: number) => {
+    const video = videoRef.current;
+    const next = Math.max(0, Math.min(1, value));
+    if (video) {
+      video.volume = next;
+      video.muted = next === 0;
+    }
+    setVolume(next);
+    setMuted(next === 0);
+    if (next > 0) lastVolumeRef.current = next;
+  };
+
+  const handleToggleMute = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.muted || video.volume === 0) {
+      const restore = lastVolumeRef.current > 0 ? lastVolumeRef.current : 0.5;
+      video.muted = false;
+      video.volume = restore;
+      setMuted(false);
+      setVolume(restore);
+    } else {
+      lastVolumeRef.current = video.volume > 0 ? video.volume : lastVolumeRef.current;
+      video.muted = true;
+      setMuted(true);
+    }
+  };
 
   return (
     <div
@@ -280,8 +339,39 @@ export default function VideoControls({
             </GhostButton>
           </div>
 
-          {/* 右：全屏 */}
-          <div className="flex items-center gap-2 justify-self-end">
+          {/* 右：音量 / 全屏 */}
+          <div className="flex items-center gap-1.5 justify-self-end sm:gap-2">
+            <div className="flex items-center gap-1">
+              <GhostButton
+                label={effectiveVolume === 0 ? "取消静音" : "静音"}
+                size="lg"
+                active={effectiveVolume === 0}
+                onClick={handleToggleMute}
+              >
+                <VolumeIcon size={22} />
+              </GhostButton>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={effectiveVolume}
+                aria-label="音量"
+                title={`音量 ${Math.round(effectiveVolume * 100)}%`}
+                onChange={(e) => handleVolumeInput(parseFloat(e.target.value))}
+                onPointerDown={() => setVolumeDragging(true)}
+                onPointerUp={() => setVolumeDragging(false)}
+                onPointerCancel={() => setVolumeDragging(false)}
+                className={cn(
+                  "h-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-[#0acaff]",
+                  "[&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3",
+                  "[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full",
+                  "[&::-webkit-slider-thumb]:bg-[#0acaff]",
+                  "[&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(10,202,255,0.55)]",
+                  compact ? "w-14" : "w-20 sm:w-24",
+                )}
+              />
+            </div>
             <GhostButton
               label={isFullscreen ? "退出全屏（Esc）" : "全屏（F）"}
               size="lg"
